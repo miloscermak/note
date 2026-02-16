@@ -1,0 +1,1829 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Second Brain s NotebookLM — Interaktivní Workshop</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #1A1A2E;
+            background: #FFFFFF;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body.dark {
+            background: #0F172A;
+            color: #E2E8F0;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: #FFFFFF;
+            border-bottom: 1px solid #E5E7EB;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 100;
+        }
+
+        body.dark .header {
+            background: #1E293B;
+            border-bottom-color: #334155;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #4F46E5;
+        }
+
+        body.dark .header-title {
+            color: #818CF8;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .dark-mode-toggle {
+            background: #F3F4F6;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        body.dark .dark-mode-toggle {
+            background: #334155;
+            color: #E2E8F0;
+        }
+
+        .dark-mode-toggle:hover {
+            background: #E5E7EB;
+        }
+
+        body.dark .dark-mode-toggle:hover {
+            background: #475569;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #E5E7EB;
+            border-radius: 2px;
+            overflow: hidden;
+            width: 200px;
+        }
+
+        body.dark .progress-bar {
+            background: #334155;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #4F46E5;
+            transition: width 0.3s;
+        }
+
+        body.dark .progress-fill {
+            background: #818CF8;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            width: 280px;
+            height: calc(100vh - 60px);
+            background: #F8F9FA;
+            border-right: 1px solid #E5E7EB;
+            overflow-y: auto;
+            padding: 24px 0;
+            z-index: 50;
+            transition: transform 0.3s;
+        }
+
+        body.dark .sidebar {
+            background: #1E293B;
+            border-right-color: #334155;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .nav-item {
+            padding: 12px 24px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            background: #E5E7EB;
+        }
+
+        body.dark .nav-item:hover {
+            background: #334155;
+        }
+
+        .nav-item.active {
+            background: #EEF2FF;
+            border-left-color: #4F46E5;
+        }
+
+        body.dark .nav-item.active {
+            background: #334155;
+            border-left-color: #818CF8;
+        }
+
+        .nav-item-number {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6B7280;
+            margin-bottom: 4px;
+        }
+
+        body.dark .nav-item-number {
+            color: #94A3B8;
+        }
+
+        .nav-item-title {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .nav-item.completed .nav-item-number::before {
+            content: '✓ ';
+            color: #10B981;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            margin-top: 60px;
+            padding: 48px;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+                padding: 24px;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .progress-bar {
+                width: 100px;
+            }
+        }
+
+        /* Section Styles */
+        .section {
+            margin-bottom: 48px;
+        }
+
+        .section-intro {
+            background: #EEF2FF;
+            border-left: 4px solid #4F46E5;
+            padding: 16px 20px;
+            margin-bottom: 32px;
+            border-radius: 4px;
+        }
+
+        body.dark .section-intro {
+            background: #1E293B;
+            border-left-color: #818CF8;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #1A1A2E;
+        }
+
+        body.dark h1 {
+            color: #E2E8F0;
+        }
+
+        h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 32px 0 16px;
+            color: #1A1A2E;
+        }
+
+        body.dark h2 {
+            color: #E2E8F0;
+        }
+
+        h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 24px 0 12px;
+            color: #374151;
+        }
+
+        body.dark h3 {
+            color: #CBD5E1;
+        }
+
+        p {
+            margin-bottom: 16px;
+        }
+
+        ul, ol {
+            margin-left: 24px;
+            margin-bottom: 16px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        /* Prompt Card */
+        .prompt-card {
+            background: #1E293B;
+            color: #E2E8F0;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 24px 0;
+            position: relative;
+        }
+
+        body.dark .prompt-card {
+            background: #334155;
+            color: #F1F5F9;
+        }
+
+        .prompt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .prompt-tag {
+            background: #4F46E5;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        body.dark .prompt-tag {
+            background: #818CF8;
+        }
+
+        .copy-button {
+            background: #4F46E5;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+
+        body.dark .copy-button {
+            background: #818CF8;
+        }
+
+        .copy-button:hover {
+            background: #4338CA;
+        }
+
+        body.dark .copy-button:hover {
+            background: #6366F1;
+        }
+
+        .copy-button.copied {
+            background: #10B981;
+        }
+
+        .prompt-text {
+            font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+            font-size: 14px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #E5E7EB;
+        }
+
+        body.dark th, body.dark td {
+            border-bottom-color: #334155;
+        }
+
+        th {
+            background: #F8F9FA;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        body.dark th {
+            background: #1E293B;
+            color: #CBD5E1;
+        }
+
+        tr:hover {
+            background: #F9FAFB;
+        }
+
+        body.dark tr:hover {
+            background: #1E293B;
+        }
+
+        /* Accordion */
+        .accordion-item {
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        body.dark .accordion-item {
+            border-color: #334155;
+        }
+
+        .accordion-header {
+            padding: 16px 20px;
+            cursor: pointer;
+            background: #F8F9FA;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 500;
+        }
+
+        body.dark .accordion-header {
+            background: #1E293B;
+        }
+
+        .accordion-header:hover {
+            background: #F3F4F6;
+        }
+
+        body.dark .accordion-header:hover {
+            background: #334155;
+        }
+
+        .accordion-icon {
+            transition: transform 0.3s;
+        }
+
+        .accordion-item.open .accordion-icon {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .accordion-item.open .accordion-content {
+            max-height: 2000px;
+        }
+
+        .accordion-body {
+            padding: 20px;
+        }
+
+        /* Checkbox */
+        .checkbox-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 0;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #D1D5DB;
+            border-radius: 4px;
+            cursor: pointer;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        body.dark .checkbox {
+            border-color: #475569;
+        }
+
+        .checkbox.checked {
+            background: #10B981;
+            border-color: #10B981;
+        }
+
+        .checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-size: 14px;
+        }
+
+        /* Do/Don't Cards */
+        .cards-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin: 24px 0;
+        }
+
+        @media (max-width: 768px) {
+            .cards-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .do-card, .dont-card {
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+
+        .do-card {
+            background: #ECFDF5;
+            border-left-color: #10B981;
+        }
+
+        body.dark .do-card {
+            background: #064E3B;
+        }
+
+        .dont-card {
+            background: #FEF2F2;
+            border-left-color: #EF4444;
+        }
+
+        body.dark .dont-card {
+            background: #7F1D1D;
+        }
+
+        .card-title {
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .do-card .card-title {
+            color: #059669;
+        }
+
+        body.dark .do-card .card-title {
+            color: #34D399;
+        }
+
+        .dont-card .card-title {
+            color: #DC2626;
+        }
+
+        body.dark .dont-card .card-title {
+            color: #F87171;
+        }
+
+        /* Timeline */
+        .timeline {
+            margin: 32px 0;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .timeline-marker {
+            width: 12px;
+            height: 12px;
+            background: #4F46E5;
+            border-radius: 50%;
+            margin-top: 6px;
+            flex-shrink: 0;
+        }
+
+        body.dark .timeline-marker {
+            background: #818CF8;
+        }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        .timeline-date {
+            font-weight: 600;
+            color: #4F46E5;
+            margin-bottom: 4px;
+        }
+
+        body.dark .timeline-date {
+            color: #818CF8;
+        }
+
+        /* RAG Diagram */
+        .rag-diagram {
+            margin: 32px 0;
+            padding: 32px;
+            background: #F8F9FA;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        body.dark .rag-diagram {
+            background: #1E293B;
+        }
+
+        .rag-steps {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .rag-step {
+            flex: 1;
+            min-width: 150px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        body.dark .rag-step {
+            background: #334155;
+        }
+
+        .rag-arrow {
+            font-size: 24px;
+            color: #4F46E5;
+        }
+
+        body.dark .rag-arrow {
+            color: #818CF8;
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            background: #4F46E5;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+            z-index: 100;
+        }
+
+        body.dark .mobile-menu-toggle {
+            background: #818CF8;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+        }
+
+        /* Print styles for Cheat Sheet */
+        @media print {
+            .header, .sidebar, .mobile-menu-toggle {
+                display: none;
+            }
+            .main-content {
+                margin: 0;
+            }
+        }
+
+        strong {
+            font-weight: 600;
+        }
+
+        code {
+            background: #F3F4F6;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        body.dark code {
+            background: #334155;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // PromptCard komponenta
+        function PromptCard({ tag, text }) {
+            const [copied, setCopied] = useState(false);
+
+            const handleCopy = () => {
+                navigator.clipboard.writeText(text);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            };
+
+            return (
+                <div className="prompt-card">
+                    <div className="prompt-header">
+                        {tag && <div className="prompt-tag">{tag}</div>}
+                        <button className={`copy-button ${copied ? 'copied' : ''}`} onClick={handleCopy}>
+                            {copied ? '✓ Zkopírováno' : '📋 Kopírovat'}
+                        </button>
+                    </div>
+                    <div className="prompt-text">{text}</div>
+                </div>
+            );
+        }
+
+        // AccordionItem komponenta
+        function AccordionItem({ title, children, defaultOpen = false }) {
+            const [isOpen, setIsOpen] = useState(defaultOpen);
+
+            return (
+                <div className={`accordion-item ${isOpen ? 'open' : ''}`}>
+                    <div className="accordion-header" onClick={() => setIsOpen(!isOpen)}>
+                        <span>{title}</span>
+                        <span className="accordion-icon">▼</span>
+                    </div>
+                    <div className="accordion-content">
+                        <div className="accordion-body">
+                            {children}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // CheckboxItem komponenta
+        function CheckboxItem({ label, checked, onChange }) {
+            return (
+                <div className="checkbox-item">
+                    <div className={`checkbox ${checked ? 'checked' : ''}`} onClick={onChange}></div>
+                    <span>{label}</span>
+                </div>
+            );
+        }
+
+        // Hlavní aplikace
+        function WorkshopApp() {
+            const [darkMode, setDarkMode] = useState(false);
+            const [activeSection, setActiveSection] = useState(0);
+            const [sidebarOpen, setSidebarOpen] = useState(false);
+            const [completedSteps, setCompletedSteps] = useState(new Set());
+            const [checkboxStates, setCheckboxStates] = useState({});
+
+            useEffect(() => {
+                document.body.className = darkMode ? 'dark' : '';
+            }, [darkMode]);
+
+            const sections = [
+                { id: 0, title: 'Úvod: Proč NotebookLM', time: '~10 min' },
+                { id: 1, title: 'Klíčové koncepty', time: '~15 min' },
+                { id: 2, title: 'Plány a limity', time: '~5 min' },
+                { id: 3, title: 'Hands-on: První zápisník', time: '~20 min' },
+                { id: 4, title: 'Příprava zdrojů', time: '~15 min' },
+                { id: 5, title: 'Workflow a prompty', time: '~25 min' },
+                { id: 6, title: 'Tipy, triky a chyby', time: '~15 min' },
+                { id: 7, title: 'Strategie a budoucnost', time: '~10 min' },
+                { id: 8, title: 'Cheat Sheet', time: 'Reference' }
+            ];
+
+            const progress = ((activeSection + 1) / sections.length) * 100;
+
+            const toggleCheckbox = (key) => {
+                setCheckboxStates(prev => ({
+                    ...prev,
+                    [key]: !prev[key]
+                }));
+            };
+
+            const renderSection = () => {
+                switch(activeSection) {
+                    case 0:
+                        return <Section0 />;
+                    case 1:
+                        return <Section1 />;
+                    case 2:
+                        return <Section2 />;
+                    case 3:
+                        return <Section3 checkboxStates={checkboxStates} toggleCheckbox={toggleCheckbox} />;
+                    case 4:
+                        return <Section4 />;
+                    case 5:
+                        return <Section5 />;
+                    case 6:
+                        return <Section6 />;
+                    case 7:
+                        return <Section7 />;
+                    case 8:
+                        return <Section8 />;
+                    default:
+                        return null;
+                }
+            };
+
+            return (
+                <div className="app-container">
+                    {/* Header */}
+                    <div className="header">
+                        <div className="header-title">Second Brain s NotebookLM</div>
+                        <div className="header-controls">
+                            <div className="progress-bar">
+                                <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+                            </div>
+                            <button className="dark-mode-toggle" onClick={() => setDarkMode(!darkMode)}>
+                                {darkMode ? '☀️ Světlý' : '🌙 Tmavý'}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Sidebar */}
+                    <div className={`sidebar ${sidebarOpen ? 'mobile-open' : ''}`}>
+                        {sections.map(section => (
+                            <div
+                                key={section.id}
+                                className={`nav-item ${activeSection === section.id ? 'active' : ''} ${completedSteps.has(section.id) ? 'completed' : ''}`}
+                                onClick={() => {
+                                    setActiveSection(section.id);
+                                    setSidebarOpen(false);
+                                }}
+                            >
+                                <div className="nav-item-number">Krok {section.id + 1} • {section.time}</div>
+                                <div className="nav-item-title">{section.title}</div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Main Content */}
+                    <div className="main-content">
+                        {renderSection()}
+                    </div>
+
+                    {/* Mobile Menu Toggle */}
+                    <button className="mobile-menu-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+                        ☰
+                    </button>
+                </div>
+            );
+        }
+
+        // Section 0: Úvod
+        function Section0() {
+            return (
+                <div className="section">
+                    <div className="section-intro">
+                        <strong>V tomto bloku (~10 min):</strong> Seznámíte se s tím, jak NotebookLM vznikl, jaký problém řeší a proč je technicky odlišný od běžných chatbotů. Pochopíte princip RAG a uvidíte, kdy NotebookLM použít a kdy ne.
+                    </div>
+
+                    <h1>Jak a proč NotebookLM vznikl</h1>
+
+                    <h2>Problém „zahlceného čtenáře"</h2>
+                    <p>V roce 2022 malý tým v Google Labs identifikoval mezeru na trhu. ChatGPT vyřešil „problém prázdné stránky" — pomáhal lidem psát. Ale nikdo pořádně neřešil „problém zahlceného čtenáře": studenti, analytici a výzkumníci se topili v PDF, přednáškových zápisech a firemních reportech. Nepotřebovali AI, která napíše báseň o pirátovi. Potřebovali AI, která jim řekne, co je v tom padesátistránkovém dokumentu, a přitom si nebude vymýšlet.</p>
+
+                    <p>V polovině roku 2022 začala produktová manažerka Raiza Martin spolu s populárně-naučným autorem Stevenem Johnsonem pracovat na prototypu. Za šest týdnů vznikl první funkční nástroj. V květnu 2023 ho Google představil na konferenci I/O pod kódovým názvem <strong>Project Tailwind</strong>. V říjnu 2023 byl přejmenován na NotebookLM a zpřístupněn prvním uživatelům v USA. V říjnu 2024 Google odstranil označení „experimentální" a v prosinci 2024 spustil placenou verzi NotebookLM Plus.</p>
+
+                    <h2>Co je RAG a proč je to důležité</h2>
+                    <p>Běžné chatboty (ChatGPT, Claude, Gemini) fungují tak, že generují odpovědi z obrovského tréninkového souboru — v podstatě z celého internetu. Když se jich zeptáte na něco, model „odhaduje" nejpravděpodobnější odpověď. Někdy se trefí, někdy si vymyslí přesvědčivě znějící nesmysl (halucinace).</p>
+
+                    <p>NotebookLM používá jiný přístup, který se v oboru nazývá <strong>RAG — Retrieval-Augmented Generation</strong> (generování rozšířené o vyhledávání). Funguje ve dvou krocích:</p>
+
+                    <div className="rag-diagram">
+                        <div className="rag-steps">
+                            <div className="rag-step">
+                                <strong>1. Retrieval</strong>
+                                <p>Prohledá vaše dokumenty</p>
+                            </div>
+                            <div className="rag-arrow">→</div>
+                            <div className="rag-step">
+                                <strong>2. Generation</strong>
+                                <p>Sestaví odpověď z pasáží</p>
+                            </div>
+                            <div className="rag-arrow">→</div>
+                            <div className="rag-step">
+                                <strong>3. Citace</strong>
+                                <p>Připojí odkazy na zdroje</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p>Představte si to jako rozdíl mezi kolegou, který odpovídá „z hlavy" (a občas si vymýšlí), a kolegou, který si nejdřív otevře složku s dokumenty, najde relevantní stránku, a pak vám řekne, co tam stojí. NotebookLM je ten druhý kolega.</p>
+
+                    <p>V odborném žargonu se tomuto přístupu říká „source-grounded cognition" — uzemněná kognice. V praxi to znamená dramaticky nižší míru halucinací (přibližně 13 %) ve srovnání s neuzemněnými modely (kolem 40 %).</p>
+
+                    <h2>Pod kapotou: Gemini 3</h2>
+                    <p>NotebookLM v únoru 2026 pohání model Gemini 3, který přináší výrazně lepší reasoning (uvažování), multimodální porozumění (text + obrázky + audio) a nižší míru chyb při práci s hustým odborným textem. Kontextové okno pojme až 1 milion tokenů napříč celým zápisníkem.</p>
+
+                    <h2>Srovnání s běžnými chatboty</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Aspekt</th>
+                                <th>Běžný chatbot</th>
+                                <th>NotebookLM</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Zdroj znalostí</strong></td>
+                                <td>Tréninková data (celý internet)</td>
+                                <td>Výhradně vaše nahrané dokumenty</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Citace</strong></td>
+                                <td>Často chybí nebo jsou vymyšlené</td>
+                                <td>Přímé odkazy na konkrétní odstavce</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Kontextové okno</strong></td>
+                                <td>Omezené na aktuální chat</td>
+                                <td>Až 1 milion tokenů napříč celým zápisníkem</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Riziko halucinací</strong></td>
+                                <td>Vysoké (model improvizuje)</td>
+                                <td>Nízké (striktní adherence k textu)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Hlavní síla</strong></td>
+                                <td>Kreativita, generování, obecné znalosti</td>
+                                <td>Analýza, syntéza a verifikace vašich dat</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>Pro koho je NotebookLM ideální</h2>
+                    <ul>
+                        <li><strong>Studenti a akademici</strong> — příprava na zkoušky, analýza studií, aktivní učení</li>
+                        <li><strong>Knowledge workers</strong> — zpracování meetingových zápisků, firemní dokumentace, rozhodovací podklady</li>
+                        <li><strong>Autoři a analytici</strong> — rešerše, validace tvrzení, tvorba obsahu z vlastních zdrojů</li>
+                        <li><strong>Týmy</strong> — sdílení znalostní báze, onboarding, eliminace „institucionální amnézie"</li>
+                    </ul>
+
+                    <h2>Kdy NotebookLM nepoužívat</h2>
+                    <p>NotebookLM není univerzální chatbot. Nehodí se na:</p>
+                    <ul>
+                        <li><strong>Obecné otázky o světě</strong> — nemá přístup k internetu (kromě Deep Research). Na „Kdo vyhrál hokej?" použijte Perplexity nebo Google.</li>
+                        <li><strong>Kreativní brainstorming od nuly</strong> — odpovídá jen z nahraných zdrojů, nemá „vlastní nápady". Na psaní sci-fi použijte ChatGPT nebo Claude.</li>
+                        <li><strong>Programování</strong> — chybí integrace s IDE a exekuce kódu. Použijte Cursor nebo GitHub Copilot.</li>
+                        <li><strong>Akademické citace ve formátu BibTeX/Zotero</strong> — neumí exportovat do citačních manažerů.</li>
+                        <li><strong>Vysoce citlivá data</strong> — data procházejí přes Google servery; free verze může být přezkoumávána lidskými hodnotiteli. Pro citlivé dokumenty zvažte lokální nástroje.</li>
+                    </ul>
+                </div>
+            );
+        }
+
+        // Section 1: Klíčové koncepty
+        function Section1() {
+            return (
+                <div className="section">
+                    <div className="section-intro">
+                        <strong>V tomto bloku (~15 min):</strong> Projdete si slovníček všech důležitých pojmů — zápisník, zdroje, citace, Studio, poznámky. Pochopíte, co je Deep Research, Data Tables a jak funguje audio transkripce.
+                    </div>
+
+                    <h1>Klíčové koncepty — slovníček, bez kterého se neobejdete</h1>
+
+                    <AccordionItem title="Zápisník (Notebook / Sešit)" defaultOpen={true}>
+                        <p>Základní organizační jednotka. Jeden zápisník = jeden projekt, jedno téma, jeden cíl. Zápisník obsahuje vaše zdroje, chat, poznámky a výstupy ze Studia. NotebookLM neumí pracovat napříč více zápisníky najednou a <strong>neexistuje žádný způsob, jak prohledávat všechny zápisníky najednou</strong> — proto je klíčové dělení podle projektů a popisné pojmenování zápisníků.</p>
+                        <p><strong>Příklad:</strong> Nemíchejte „Příprava na zkoušku z práva" a „Plánování dovolené" do jednoho zápisníku. Vytvořte dva.</p>
+                    </AccordionItem>
+
+                    <AccordionItem title="Zdroje (Sources)">
+                        <p>Dokumenty, které do zápisníku nahrajete. NotebookLM pracuje jen s nimi. Podporované formáty:</p>
+                        <ul>
+                            <li><strong>Dokumenty:</strong> PDF, Google Docs, Google Slides, Google Sheets, DOCX, Markdown, TXT</li>
+                            <li><strong>Web:</strong> webové URL (jen textový obsah), YouTube URL (vytáhne transkript; jen veřejná videa s titulky)</li>
+                            <li><strong>Média:</strong> audio soubory (MP3, WAV, MP4, M4A, AIFF, AAC, CAF, AMR, Opus — vytvoří transkript), obrázky (fotky ručních poznámek, whiteboardů, screenshotů)</li>
+                        </ul>
+                        <p>Každý zdroj může mít maximálně <strong>500 000 slov / 200 MB</strong>. Zdroje jsou <strong>statické kopie</strong> — když změníte originál, zápisník se sám neaktualizuje.</p>
+                    </AccordionItem>
+
+                    <AccordionItem title="Citace (Citations)">
+                        <p>Srdce celého systému. Ke každé odpovědi NotebookLM připojí čísla odkazující na konkrétní pasáže ve vašich zdrojích. Najedete myší na citaci — uvidíte náhled původního textu. Kliknete — skočíte přímo na přesné místo v dokumentu. Tohle je zásadní změna oproti chatbotům, kde se pohybujete v „pravděpodobnostech".</p>
+                    </AccordionItem>
+
+                    <AccordionItem title="Studio">
+                        <p>Panel na pravé straně rozhraní, kde generujete výstupy jedním (nebo několika) kliknutími:</p>
+                        <ul>
+                            <li><strong>Report / Study Guide / Briefing / FAQ</strong> — strukturované textové výstupy</li>
+                            <li><strong>Audio Overview</strong> — AI podcast ve formátech Deep Dive, Brief, Critique, Debate</li>
+                            <li><strong>Video Overview</strong> — narativní video s vizuály (Pro/Ultra plány)</li>
+                            <li><strong>Slide Deck</strong> — prezentace exportovatelná do Google Slides</li>
+                            <li><strong>Data Table</strong> — strukturovaná tabulka s exportem do Google Sheets</li>
+                            <li><strong>Flashcards a kvízy</strong> — pro aktivní učení</li>
+                            <li><strong>Mind mapa</strong> — vizuální přehled vztahů mezi koncepty</li>
+                            <li><strong>Infografika</strong> — jednostránkové vizuální shrnutí</li>
+                        </ul>
+                    </AccordionItem>
+
+                    <AccordionItem title="Poznámky (Notes)">
+                        <p>Odpovědi z chatu si můžete uložit jako poznámky (Save to note). Poznámky zachovávají formát, tabulky i klikací citace. A klíčová funkce: poznámku můžete převést na zdroj (Convert to source) — tím se stane „kanonickou" součástí vaší znalostní báze.</p>
+                    </AccordionItem>
+
+                    <AccordionItem title="Configure Chat / Configure Notebook">
+                        <p>Nastavení chování AI pro celý zápisník. Volíte styl (Default / Learning Guide / Custom), délku odpovědí a vlastní instrukce. U Custom stylu máte k dispozici <strong>až 10 000 znaků</strong> pro definici role, tónu, formátu a pravidel — to je dost na plnohodnotnou personu.</p>
+                    </AccordionItem>
+
+                    <AccordionItem title="Deep Research">
+                        <p>Autonomní agent, který prohledá web, najde ~50 kvalitních zdrojů a sestaví citovanou výzkumnou zprávu. Výsledné zdroje pak můžete importovat do zápisníku. Skvělé na rychlé budování bibliografie k novému tématu.</p>
+                    </AccordionItem>
+
+                    <AccordionItem title="Fast Research">
+                        <p>Rychlé vyhledání zdrojů (z webu nebo Google Drive) přímo v panelu Sources. Méně hloubkové než Deep Research, ale rychlejší na doplnění konkrétních materiálů.</p>
+                    </AccordionItem>
+
+                    <AccordionItem title="Data Tables">
+                        <p>Jedna z nejvýznamnějších novinek konce roku 2025. AI z vašich dokumentů vytáhne proměnné a sestaví strukturovanou tabulku. Můžete definovat vlastní sloupce (ikonka tužky) a exportovat do Google Sheets. V praxi to šetří desítky minut týdně — akční položky z meetingů, srovnání konkurentů, extrakce metrik.</p>
+                    </AccordionItem>
+
+                    <AccordionItem title="Audio transkripce — skrytě užitečná funkce">
+                        <p>Když do NotebookLM nahrajete audio soubor (MP3, WAV, M4A a další), automaticky se vytvoří <strong>textový transkript</strong>, který se stane plnohodnotným zdrojem. Můžete se na něj ptát, citace odkazují do transkriptu.</p>
+                        <p><strong>Podporované formáty:</strong> MP4, M4A, AIFF, AAC, CAF, AMR, WAV, MP3, Opus. Nepodporované formáty (FLAC, OGG, WMA, WebM) je nutné předem konvertovat.</p>
+                        <p><strong>Jazyky:</strong> Transkripce funguje ve 130+ jazycích včetně češtiny. Kvalita přepisu ale závisí na čistotě nahrávky.</p>
+                        <p><strong>Příklad použití:</strong> Nahrajete hodinový rozhovor s expertem jako MP3 → NotebookLM vytvoří transkript → ptáte se: „Jaké tři hlavní body expert zmiňuje? Cituj." → dostanete strukturovanou odpověď s odkazy na konkrétní místa v přepisu.</p>
+                    </AccordionItem>
+
+                    <AccordionItem title="Interaktivní Audio Overviews">
+                        <p>AI vygeneruje podcast (dva virtuální hostitelé diskutují o vašich zdrojích) v 80+ jazycích. Novinkou je možnost se do podcastu „připojit" hlasem (tlačítko „Join" / „Intervene"), položit doplňující otázku a hostitelé vám odpoví na základě zdrojů. Interaktivní mód zatím funguje jen v angličtině.</p>
+                    </AccordionItem>
+                </div>
+            );
+        }
+
+        // Section 2: Cenové plány
+        function Section2() {
+            return (
+                <div className="section">
+                    <div className="section-intro">
+                        <strong>V tomto bloku (~5 min):</strong> Přehled cenových plánů, limitů a toho, co dostanete zdarma vs. za co se platí.
+                    </div>
+
+                    <h1>Cenové plány a limity</h1>
+                    <p>Přehled toho, co dostanete zdarma a za co se platí. Konkrétní čísla k únoru 2026.</p>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Vlastnost</th>
+                                <th>Free</th>
+                                <th>Plus</th>
+                                <th>Pro ($19.99/měs.)</th>
+                                <th>Ultra ($249.99/měs.)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Zápisníky</strong></td>
+                                <td>100</td>
+                                <td>200</td>
+                                <td>500</td>
+                                <td>500</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Zdroje na zápisník</strong></td>
+                                <td>50</td>
+                                <td>100</td>
+                                <td>300</td>
+                                <td>600</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Limit slov na zdroj</strong></td>
+                                <td>500 000</td>
+                                <td>500 000</td>
+                                <td>500 000</td>
+                                <td>500 000</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Chat dotazy denně</strong></td>
+                                <td>50</td>
+                                <td>~100</td>
+                                <td>~250–500</td>
+                                <td>~2 500–5 000</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Audio Overviews denně</strong></td>
+                                <td>3</td>
+                                <td>~6</td>
+                                <td>~20</td>
+                                <td>~200</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Deep Research</strong></td>
+                                <td>10 relací/měs.</td>
+                                <td>20 relací/den</td>
+                                <td>50 relací/den</td>
+                                <td>200 relací/den</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Video Overviews</strong></td>
+                                <td>Ne</td>
+                                <td>Ne</td>
+                                <td>Omezeně</td>
+                                <td>Ano (plná kvalita)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Týmové zápisníky</strong></td>
+                                <td>Ne</td>
+                                <td>Ano</td>
+                                <td>Ano</td>
+                                <td>Ano</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p><strong>Poznámka:</strong> Google uvádí, že usage limity se mohou měnit. Čísla v tabulce jsou orientační k únoru 2026. Pokud vám v UI ukazuje jiná čísla, platí ta aktuální.</p>
+
+                    <p><strong>Pro většinu uživatelů bohatě stačí Free tier.</strong> Pokud narazíte na limity (typicky 50 dotazů denně nebo 50 zdrojů na zápisník), první řešení je optimalizace workflow (viz tipy níže), ne upgrade.</p>
+                </div>
+            );
+        }
+
+        // Section 3: Hands-on
+        function Section3({ checkboxStates, toggleCheckbox }) {
+            return (
+                <div className="section">
+                    <div className="section-intro">
+                        <strong>V tomto bloku (~20 min):</strong> Nyní si vše vyzkoušíte prakticky. Vytvoříte svůj první zápisník, nahrajete zdroje, nastavíte personu a vygenerujete první výstup. Zaškrtávejte jednotlivé kroky, až je dokončíte.
+                    </div>
+
+                    <h1>Rychlý start: od nuly k prvnímu výstupu za 15 minut</h1>
+                    <p>Krok za krokem, jak začít. Žádná teorie navíc — rovnou do akce.</p>
+
+                    <h2>Teď si to vyzkoušejte</h2>
+
+                    <CheckboxItem
+                        label="Krok 1: Založte zápisník s jasným záměrem"
+                        checked={checkboxStates.step1}
+                        onChange={() => toggleCheckbox('step1')}
+                    />
+                    <p>Jděte na <strong>notebooklm.google.com</strong> → klikněte „Create" → pojmenujte ho tematicky.</p>
+                    <ul>
+                        <li>✅ „Analýza trhu s tepelnými čerpadly Q1 2026"</li>
+                        <li>✅ „Zkouška – Kognitivní psychologie"</li>
+                        <li>✅ „Projekt Phoenix – Onboarding"</li>
+                        <li>❌ „Poznámky" (příliš vágní)</li>
+                        <li>❌ „Všechno" (zaručený chaos)</li>
+                    </ul>
+
+                    <CheckboxItem
+                        label="Krok 2: Nahrajte 3–5 zdrojů"
+                        checked={checkboxStates.step2}
+                        onChange={() => toggleCheckbox('step2')}
+                    />
+                    <p>Začněte s malým, fokusovaným setem. Nemíchejte nesouvisející témata. Podporované formáty: PDF, Google Docs, Google Slides, Google Sheets, webové URL, YouTube URL, audio soubory, obrázky.</p>
+                    <p><strong>Alternativa:</strong> Pokud ještě nemáte vlastní dokumenty, spusťte <strong>Deep Research</strong> — zadejte téma a nechte agenta najít ~50 zdrojů z webu. Vyberte nejlepší a importujte je.</p>
+
+                    <CheckboxItem
+                        label="Krok 3: Nastavte jazyk a personu"
+                        checked={checkboxStates.step3}
+                        onChange={() => toggleCheckbox('step3')}
+                    />
+                    <ol>
+                        <li><strong>Output Language</strong> → čeština (ovlivní jazyk chatu i všech výstupů ze Studia)</li>
+                        <li><strong>Configure Chat</strong> → vyberte styl:
+                            <ul>
+                                <li><strong>Default</strong> — univerzální</li>
+                                <li><strong>Learning Guide</strong> — vede vás krok za krokem, klade doplňující otázky (ideální pro učení)</li>
+                                <li><strong>Custom</strong> — vaše vlastní instrukce</li>
+                            </ul>
+                        </li>
+                    </ol>
+
+                    <PromptCard
+                        tag="Custom Instrukce"
+                        text="Jsi můj research editor a strategický poradce. Hledej rozpory mezi zdroji, mapuj trendy a rizika. Odpovídej česky, stručně a vždy s citacemi. Pokud něco ve zdrojích není, řekni to přímo — nevymýšlej si."
+                    />
+
+                    <CheckboxItem
+                        label="Krok 4: Položte první otázky"
+                        checked={checkboxStates.step4}
+                        onChange={() => toggleCheckbox('step4')}
+                    />
+                    <p>Nezačínejte vágně („Co je v dokumentech?"). Buďte konkrétní:</p>
+                    <ul>
+                        <li>„Kde se zdroje neshodují? Cituj konkrétní pasáže."</li>
+                        <li>„Vytvoř executive brief na 200 slov s třemi příležitostmi a třemi riziky."</li>
+                        <li>„Jaké otázky tenhle výzkum nezodpovídá?"</li>
+                    </ul>
+
+                    <CheckboxItem
+                        label="Krok 5: Vygenerujte první výstup ve Studiu"
+                        checked={checkboxStates.step5}
+                        onChange={() => toggleCheckbox('step5')}
+                    />
+                    <p>V panelu Studio vyberte to, co právě potřebujete:</p>
+                    <ul>
+                        <li>Potřebujete přehled → <strong>Report</strong> (Briefing / Study Guide / FAQ)</li>
+                        <li>Potřebujete procvičování → <strong>Quiz / Flashcards</strong></li>
+                        <li>Potřebujete strukturovaná data → <strong>Data Table</strong></li>
+                        <li>Potřebujete prezentaci → <strong>Slide Deck</strong></li>
+                        <li>Potřebujete porozumění „na cestě" → <strong>Audio Overview</strong> (Deep Dive, Brief, Critique nebo Debate)</li>
+                    </ul>
+
+                    <CheckboxItem
+                        label="Krok 6: Uložte cenné odpovědi"
+                        checked={checkboxStates.step6}
+                        onChange={() => toggleCheckbox('step6')}
+                    />
+                    <p>U každé dobré odpovědi klikněte <strong>Save to note</strong>. Zachová se formát, tabulky i klikací citace. Poznámky můžete později převést na zdroj (Convert to source) — tím si vytvoříte „archiv znalostí".</p>
+                </div>
+            );
+        }
+
+        // Section 4: Příprava zdrojů
+        function Section4() {
+            return (
+                <div className="section">
+                    <div className="section-intro">
+                        <strong>V tomto bloku (~15 min):</strong> Naučíte se, jak připravit dokumenty, aby NotebookLM podával nejlepší výsledky. Kvalita vstupů je důležitější než kvalita promptů.
+                    </div>
+
+                    <h1>Příprava zdrojů: epistemické inženýrství</h1>
+                    <p>Efektivita výstupů z NotebookLM je přímo úměrná kvalitě vstupních dat. Nebo jinak: pokud do zápisníku nasypete nepořádek, dostanete zpátky elegantně formulovaný nepořádek.</p>
+
+                    <h2>Zdrojová hygiena: co dělat a proč</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Co dělat</th>
+                                <th>Jak přesně</th>
+                                <th>Proč to funguje</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Pojmenování zdrojů</strong></td>
+                                <td>"[Projekt] – [Typ] – [Datum] – [Verze]"</td>
+                                <td>AI vnímá názvy zdrojů. „Kritika metodologie X od autora Y (2025).pdf" dává modelu okamžitý kontext, který zlepšuje přesnost citací.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Snížení šumu</strong></td>
+                                <td>Raději méně zdrojů, ale kvalitních; duplicity pryč</td>
+                                <td>Šum zvyšuje riziko špatně zvolené pasáže.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Rozdělení tlustých PDF</strong></td>
+                                <td>Velký PDF rozdělit na kapitoly nebo logické části</td>
+                                <td>Usnadníte citování a „selektivní práci" se zdroji (checkboxy).</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Čištění webových zdrojů</strong></td>
+                                <td>Před nahráním jako URL si uvědomte, že NotebookLM stáhne celou stránku včetně menu a patiček.</td>
+                                <td>AI zpracovává vše, co dostane — včetně navigačních lišt a reklam.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Kontrola textové vrstvy PDF</strong></td>
+                                <td>Ujistěte se, že PDF obsahuje skutečný text, ne jen obrázky</td>
+                                <td>Naskenované PDF bez OCR NotebookLM špatně přečte.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Slučování krátkých dokumentů</strong></td>
+                                <td>12 krátkých emailů k jednomu tématu → jeden Google Doc s nadpisy</td>
+                                <td>Ušetříte sloty zdrojů (limit je 50 u Free).</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Google Docs se záložkami</strong></td>
+                                <td>Jeden Google Doc s tabs (leden, únor, březen)</td>
+                                <td>NotebookLM je vidí všechny jako jeden zdroj, ale naviguje v nich. Pozor: obsah pod-záložek (sub-tabs) se neimportuje.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Vlastní poznámky jako zdroje</strong></td>
+                                <td>Notes → Convert to source</td>
+                                <td>Z poznámek se stane „kanonická" vrstva: definice, rozhodnutí, glossary.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>Technika „Mega-dokumentu"</h2>
+                    <p>Pokud máte tisíce drobných textů a narážíte na limit zdrojů, slučujte tématicky příbuzné soubory do jednoho velkého PDF nebo textového dokumentu <strong>před nahráním</strong>. Tento přístup nejen obchází limity, ale také zvyšuje schopnost modelu nacházet souvislosti v rámci jednoho kontextového okna.</p>
+
+                    <h2>Pozor na limit 500 000 slov</h2>
+                    <p>Pokud PDF přesáhne 500 000 slov, NotebookLM <strong>potichu přestane číst za touto hranicí</strong> — bez varování. Rozdělte takový dokument na části a nahrajte je jako samostatné zdroje.</p>
+
+                    <h2>Diverzifikace formátů</h2>
+                    <p>Nejrobustnější zápisníky kombinují různé typy zdrojů — teoretické texty (PDF), praktické ukázky (YouTube transkripty), data (Google Sheets) a osobní reflexe (audio záznamy). Čím pestřejší mix, tím bohatší analýza.</p>
+
+                    <h2>Workflow „Triáda" — integrace s externími systémy</h2>
+                    <p>V praxi se osvědčil třífázový proces:</p>
+                    <ol>
+                        <li><strong>Fáze sběru</strong> (Obsidian / Notion): Nefiltrované poznámky a surový výzkum. Tady žije všechno.</li>
+                        <li><strong>Fáze syntézy</strong> (NotebookLM): Nahrávejte pouze vyčištěné klastry zdrojů pro hloubkovou analýzu.</li>
+                        <li><strong>Fáze prezentace</strong> (ChatGPT / Claude): Finální výstupy z NotebookLM přeneste do kreativnějších modelů pro design, typesetting nebo stylistické doladění.</li>
+                    </ol>
+                </div>
+            );
+        }
+
+        // Section 5: Workflow a prompty (zkrácená verze kvůli délce)
+        function Section5() {
+            return (
+                <div className="section">
+                    <div className="section-intro">
+                        <strong>V tomto bloku (~25 min):</strong> Naučíte se pracovat s prompty, poznáte rozdíly oproti běžným chatbotům a získáte přístup ke kompletní knihovně 26+ kopírovatelných promptů pro různé účely.
+                    </div>
+
+                    <h1>Architektura instrukcí: jak psát prompty pro NotebookLM</h1>
+
+                    <h2>Tři klíčové rozdíly oproti běžným chatbotům</h2>
+                    <p><strong>1. Důkazní režim:</strong> NotebookLM používá citace z vašich zdrojů. Nad citací můžete „hover" a okamžitě vidíte citovanou pasáž, klikem skočíte do místa v dokumentu.</p>
+                    <p><strong>2. Implicitní omezení na vaše zdroje:</strong> Chat odpovídá jen z dat ve zdrojích. Dotazy musí být buď o zdrojích, nebo jasně označené jako kreativní transformace.</p>
+                    <p><strong>3. Configure Chat jako per-zápisníkové řízení:</strong> Nastavujete styl a délku jednou — platí pro celý zápisník. U Custom máte 10 000 znaků na instrukce.</p>
+
+                    <h2>Doporučená struktura promptu</h2>
+                    <ol>
+                        <li><strong>Kontext:</strong> Jaký typ zdrojů a pro koho to je.</li>
+                        <li><strong>Úkol:</strong> Co má vzniknout (konkrétní artefakt).</li>
+                        <li><strong>Důkazy:</strong> Požadavek na citace + pravidlo „když to není ve zdrojích, řekni to".</li>
+                        <li><strong>Formát:</strong> Tabulka / odrážky / checklist (dle potřeby).</li>
+                        <li><strong>Kontrola:</strong> „Vyjmenuj nejasnosti a navrhni, jaké zdroje chybí."</li>
+                    </ol>
+
+                    <h2>Knihovna promptů — kopírujte a používejte</h2>
+
+                    <h3>Univerzální prompty</h3>
+
+                    <PromptCard
+                        tag="Univerzální"
+                        text="Odpověz pouze na základě vybraných zdrojů. Každé tvrzení podlož citací. Pokud něco ve zdrojích není, napiš „ve zdrojích nenalezeno"."
+                    />
+
+                    <PromptCard
+                        tag="Univerzální"
+                        text="Projdi tento text [vložit]. Vypiš všechny věty, které nejsou přímo podložené zdroji. U podložených uveď citaci. Navrhni přeformulování nepodložených."
+                    />
+
+                    <PromptCard
+                        tag="Univerzální"
+                        text="Najdi místa, kde si zdroje odporují (definice, čísla, doporučení). U každého rozporu popiš: A říká…, B říká…, možná příčina, co ověřit."
+                    />
+
+                    <PromptCard
+                        tag="Univerzální"
+                        text="Vytvoř slovníček pojmů: termín → definice → citace → typický příklad ze zdroje."
+                    />
+
+                    <PromptCard
+                        tag="Univerzální"
+                        text="Z tohoto dokumentu udělej checklist. Každý bod: akce, kriterium splnění, citace."
+                    />
+
+                    <h3>Prompty pro výzkum a analýzu</h3>
+
+                    <PromptCard
+                        tag="Výzkum"
+                        text="Analyzuj nahrané zdroje a identifikuj oblasti, kde se autoři neshodují. Uveď přímé citace pro každý protichůdný názor a vysvětli, proč k neshodě pravděpodobně dochází (rozdílná metodologie, čas vydání, ideologie)."
+                    />
+
+                    <PromptCard
+                        tag="Výzkum"
+                        text="Na základě aktuálních tržních trendů roku 2026 v oblasti [DOPLŇTE] identifikuj, co v těchto zdrojích chybí. Jaké kritické otázky autoři nepoložili a jaké předpoklady dělají bez důkazů?"
+                    />
+
+                    <PromptCard
+                        tag="Výzkum"
+                        text="Vytvoř shrnutí pro vedení o délce max. 500 slov. Obsahuj: 1. Třívětý výtah situace. 2. Pět klíčových zjištění. 3. Analýzu rizik s odkazem na konkrétní varování v dokumentech. 4. Tři doporučené akční kroky."
+                    />
+
+                    <PromptCard
+                        tag="Výzkum"
+                        text="Vytvoř srovnávací tabulku: [Vendor A] vs [Vendor B] vs [Vendor C]. Sloupce: Cena, Klíčové funkce, Implementační rizika, Reference. Cituj zdroje u každé buňky."
+                    />
+
+                    <h3>Prompty pro studium a učení</h3>
+
+                    <PromptCard
+                        tag="Studium"
+                        text="Z těchto zdrojů navrhni 7denní učební plán. Každý den: témata, 3 otázky na porozumění, 5 pojmů, návrh procvičení. Cituj."
+                    />
+
+                    <PromptCard
+                        tag="Studium"
+                        text="Vygeneruj 12 otázek. U každé: správná odpověď, krátké vysvětlení, citace, 1 častý omyl."
+                    />
+
+                    <PromptCard
+                        tag="Studium"
+                        text="Neposkytuj mi přímé odpovědi. Místo toho mě veď k pochopení pomocí řady otázek založených na nahraných učebnicích. Pokud udělám chybu, nasměruj mě na konkrétní stranu v dokumentu."
+                    />
+
+                    <h3>Prompty pro byznys a produktivitu</h3>
+
+                    <PromptCard
+                        tag="Byznys"
+                        text="Vytvoř tabulku: Owner | Action | Priority | Due date | Dependencies | Evidence quote. Vyplň z transkriptů schůzek v tomto zápisníku."
+                    />
+
+                    <PromptCard
+                        tag="Byznys"
+                        text="Napiš decision memo: Kontext, Možnosti, Doporučení, Rizika, Nejasnosti. Každou sekci podlož citacemi."
+                    />
+
+                    <PromptCard
+                        tag="Byznys"
+                        text="Z těchto interních zdrojů vytvoř FAQ pro nováčka. Vždy přidej citaci a odkaz na část dokumentu."
+                    />
+
+                    <h3>Prompty pro tvorbu obsahu</h3>
+
+                    <PromptCard
+                        tag="Obsah"
+                        text="Převeď tento hodinový přepis rozhovoru do strukturované osnovy blogpostu o 800 slovech. Zachovej přesnou terminologii ze zdroje. Navrhni 3 varianty titulku."
+                    />
+
+                    <PromptCard
+                        tag="Obsah"
+                        text="Na základě dokumentu [NÁZEV] vytvoř: 1. LinkedIn post (háček, 3 vhledy, CTA). 2. Vlákno na Twitter (8 tweetů). 3. Newsletter sekci o 250 slovech. Zachovej přesnou terminologii ze zdroje."
+                    />
+
+                    <h3>Persona prompty (pro Configure Notebook / Custom)</h3>
+
+                    <PromptCard
+                        tag="Persona"
+                        text="Jsi přísný, ale férový výzkumný editor. Vždy hledej slabiny v argumentaci, ověřuj citace a upozorňuj na nepodložené závěry. Pokud je tvrzení správné, potvrď ho s citací. Pokud je problematické, vysvětli proč."
+                    />
+
+                    <PromptCard
+                        tag="Persona"
+                        text="Jsi trpělivý tutor, který mi pomáhá učit se nové koncepty. Vše vysvětluj jednoduše, s příklady ze zdrojů. Po každém vysvětlení polož kontrolní otázku. Pokud odpovím špatně, nasměruj mě na relevantní pasáž."
+                    />
+
+                    <PromptCard
+                        tag="Persona"
+                        text="Jsi senior konzultant. Na každý problém se dívej skrz framework: co funguje, co nefunguje, co chybí, co udělat jako první. Vždy cituj, vždy buď konkrétní, vždy navrhni další krok."
+                    />
+
+                    <h2>Workflow pro různé role</h2>
+
+                    <AccordionItem title="Knowledge Worker — z meetingového chaosu do systému">
+                        <p><strong>Scénář:</strong> Potřebujete zpracovat 15 reportů o trhu a připravit executive brief.</p>
+                        <ol>
+                            <li>Vytvořte zápisník „Market Analysis Q1 2026"</li>
+                            <li>Nahrajte reporty, analýzy konkurence, relevantní články</li>
+                            <li>Nastavte personu: <em>„Jsi senior analytik. Vyhodnocuj data kriticky, hledej trendy a rizika."</em></li>
+                            <li>Spusťte sérii promptů pro analýzu a srovnání</li>
+                            <li>Ve Studiu vygenerujte <strong>Slide Deck</strong> pro management</li>
+                            <li>Pro akční položky: Studio → <strong>Data Table</strong> → Export to Sheets</li>
+                        </ol>
+                        <p><strong>Killer trik:</strong> Tabulka „akce/owner/deadline" + export do Sheets. Citace se exportují zvlášť — skvělé pro audit.</p>
+                    </AccordionItem>
+
+                    <AccordionItem title="Student — aktivní učení">
+                        <p><strong>Scénář:</strong> Příprava na zkoušku z 8 přednášek a 3 paperů.</p>
+                        <ol>
+                            <li>Vytvořte zápisník „Zkouška – Kognitivní psychologie"</li>
+                            <li>Nahrajte přednáškové slidy, poznámky, papery</li>
+                            <li>Configure Chat → <strong>Learning Guide</strong></li>
+                            <li>Studio → vygenerujte <strong>Study Guide</strong> + <strong>Quiz</strong></li>
+                            <li>U chyb v kvízu použijte <strong>Explain</strong></li>
+                            <li>Vygenerujte <strong>Audio Overview</strong> ve formátu „Deep Dive"</li>
+                        </ol>
+                    </AccordionItem>
+
+                    <AccordionItem title="Autor / Content Creator — živý dokument">
+                        <p><strong>Scénář:</strong> Píšete sérii článků o AI trendech.</p>
+                        <ol>
+                            <li>Vytvořte „living document" — jeden Google Doc s nápady, citáty, postřehy</li>
+                            <li>Propojte ho s NotebookLM jako jediný zdroj</li>
+                            <li>Když aktualizujete Doc, v NotebookLM klikněte „Click to sync with Google Drive"</li>
+                            <li>Ptejte se: <em>„Jaké 3 nápady z mých poznámek mají největší potenciál pro virální článek?"</em></li>
+                        </ol>
+                    </AccordionItem>
+                </div>
+            );
+        }
+
+        // Section 6: Tipy a chyby
+        function Section6() {
+            return (
+                <div className="section">
+                    <div className="section-intro">
+                        <strong>V tomto bloku (~15 min):</strong> Praktické tipy, které vám ušetří čas, a nejčastější chyby, kterým se vyhnete.
+                    </div>
+
+                    <h1>Tipy, triky a méně známé funkce</h1>
+
+                    <h2>Práce se zdroji</h2>
+                    <AccordionItem title="1. Selektivní výběr zdrojů" defaultOpen={true}>
+                        <p>Nemusíte pracovat se všemi zdroji. Odškrtněte v levém panelu ty, které zrovna nepotřebujete — snížíte šum a zvýšíte přesnost odpovědí.</p>
+                    </AccordionItem>
+
+                    <AccordionItem title="2. Vypínání zdrojů za běhu">
+                        <p>Během konverzace můžete odškrtávat zdroje. AI okamžitě „zapomene" na vypnuté dokumenty — ideální pro izolování protichůdných teorií.</p>
+                    </AccordionItem>
+
+                    <AccordionItem title="3. YouTube Playlist import">
+                        <p>Plus a Pro verze umožňují vložit odkaz na celý YouTube playlist. AI vytvoří znalostní bázi z transkriptů.</p>
+                    </AccordionItem>
+
+                    <AccordionItem title="4. Google Docs tabs jako multi-zdroj">
+                        <p>Jeden Google Doc s několika záložkami se chová jako jeden zdroj, ale NotebookLM v záložkách naviguje. Šetříte sloty. Pozor: pod-záložky se neimportují.</p>
+                    </AccordionItem>
+
+                    <h2>Citace a navigace</h2>
+                    <AccordionItem title="5. Hover over references">
+                        <p>Najeďte myší na číslo citace v odpovědi — uvidíte náhled původní pasáže. Kliknutím skočíte přímo na přesné místo v dokumentu (deep link).</p>
+                    </AccordionItem>
+
+                    <AccordionItem title="6. Audio transkripce s časovými značkami">
+                        <p>Při nahrání MP3 AI vytvoří transkript s citacemi propojenými na přesný čas v nahrávce.</p>
+                    </AccordionItem>
+
+                    <h2>Pokročilé strategie</h2>
+                    <AccordionItem title="7. Výstupy jako vstupy (řetězení)">
+                        <p>Vygenerujte report → z reportu mind mapu → z mind mapy audio → z reportu flashcards. Řetězení výstupů je to, co dělá z NotebookLM silný nástroj.</p>
+                    </AccordionItem>
+
+                    <AccordionItem title="8. Notebook jako prompt generátor">
+                        <p>Nahrajte do zápisníku nejlepší prompting guides a příklady. Pak se ptejte: <em>„Vytvoř prompt pro [use case]."</em> NotebookLM vygeneruje prompt založený na skutečném know-how.</p>
+                    </AccordionItem>
+
+                    <h1>Nejčastější chyby a jak se jim vyhnout</h1>
+
+                    <div className="cards-container">
+                        <div className="do-card">
+                            <div className="card-title">✅ DĚLAT</div>
+                            <ul>
+                                <li>Vytvářet menší, tematicky zaměřené zápisníky</li>
+                                <li>Ověřit, že PDF obsahuje skutečný text (OCR)</li>
+                                <li>Vždy zkontrolovat citace kliknutím</li>
+                                <li>Nastavit Custom Instructions</li>
+                                <li>Batchovat prompty do jednoho strukturovaného dotazu</li>
+                                <li>Archivovat poznámky před mazáním zdrojů</li>
+                            </ul>
+                        </div>
+
+                        <div className="dont-card">
+                            <div className="card-title">❌ NEDĚLAT</div>
+                            <ul>
+                                <li>Jeden mega-zápisník na všechno</li>
+                                <li>Nahrávat naskenované PDF bez OCR</li>
+                                <li>Bezmyšlenkovitě kopírovat AI odpovědi</li>
+                                <li>Nechat defaultní nastavení</li>
+                                <li>Plýtvat denním limitem jednotlivými otázkami</li>
+                                <li>Mazat zdroje bez archivace</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <AccordionItem title="Chyba 1: Jeden mega-zápisník na všechno">
+                        <p><strong>Symptom:</strong> Nahrajete 40 nesouvisejících dokumentů → AI se ztrácí, odpovědi jsou generické a povrchní.</p>
+                        <p><strong>Oprava:</strong> Vytvořte menší, tematicky zaměřené zápisníky. Jedno téma = jeden zápisník.</p>
+                    </AccordionItem>
+
+                    <AccordionItem title="Chyba 2: Nahrávání nekvalitních zdrojů">
+                        <p><strong>Symptom:</strong> Naskenované PDF bez textu, rozmazané fotky, dokumenty s minimálním obsahem.</p>
+                        <p><strong>Oprava:</strong> Vždy ověřte, že PDF obsahuje skutečný text. Používejte OCR nástroje předem. Pamatujte: „garbage in, garbage out".</p>
+                    </AccordionItem>
+
+                    <AccordionItem title="Chyba 3: Považovat výstupy za finální">
+                        <p><strong>Symptom:</strong> Bezmyšlenkovité kopírování AI odpovědí do prezentace nebo reportu.</p>
+                        <p><strong>Oprava:</strong> NotebookLM je partner, ne autopilot. Vždy zkontrolujte citace, ověřte logiku, přidejte vlastní expertízu. Zaveďte pravidlo „Human-in-the-loop".</p>
+                    </AccordionItem>
+
+                    <AccordionItem title="Bonusová chyba: Klam plynulosti">
+                        <p>Dobře napsaný a plynulý text od AI vyvolává v lidech pocit, že je pravdivý. Model má tendenci přidávat „přesvědčivý nátěr" k informacím, které v textu nejsou.</p>
+                        <p><strong>Náprava:</strong> Implementujte do každého analytického promptu klauzuli: <em>„Uváděj pouze to, co je explicitně napsáno. Pokud interpretuješ nebo odvozuješ, označ to jako ‚analytický odhad'."</em></p>
+                    </AccordionItem>
+                </div>
+            );
+        }
+
+        // Section 7: Strategie a budoucnost
+        function Section7() {
+            return (
+                <div className="section">
+                    <div className="section-intro">
+                        <strong>V tomto bloku (~10 min):</strong> Kdy NotebookLM použít a kdy ne, kam Google s nástrojem míří a co můžeme očekávat v budoucnu.
+                    </div>
+
+                    <h1>Strategické rozhodování: kdy NotebookLM použít a kdy ne</h1>
+
+                    <h2>Kdy ANO ✅</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Scénář</th>
+                                <th>Proč NotebookLM</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Analýza vlastních dokumentů</td>
+                                <td>Source-grounded odpovědi s citacemi, žádné halucinace z webu</td>
+                            </tr>
+                            <tr>
+                                <td>Příprava na zkoušky</td>
+                                <td>Flashcards, kvízy, study guides, audio přehledy</td>
+                            </tr>
+                            <tr>
+                                <td>Literature review</td>
+                                <td>Porovnání zdrojů, hledání rozporů, identifikace mezer</td>
+                            </tr>
+                            <tr>
+                                <td>Meeting příprava a follow-up</td>
+                                <td>Shrnutí zápisků, generování agend, akční položky</td>
+                            </tr>
+                            <tr>
+                                <td>Onboarding nových lidí</td>
+                                <td>Stravitelné průvodce z firemní dokumentace s citacemi</td>
+                            </tr>
+                            <tr>
+                                <td>„Druhý mozek"</td>
+                                <td>Centrální místo pro propojení vlastních znalostí</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>Kdy NE ❌</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Scénář</th>
+                                <th>Proč ne</th>
+                                <th>Co místo toho</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Obecné otázky o světě</td>
+                                <td>Neprohledává web (kromě Deep Research)</td>
+                                <td>ChatGPT, Perplexity, Gemini</td>
+                            </tr>
+                            <tr>
+                                <td>Kreativní brainstorming od nuly</td>
+                                <td>Nemá „vlastní nápady", odpovídá jen ze zdrojů</td>
+                                <td>ChatGPT, Claude</td>
+                            </tr>
+                            <tr>
+                                <td>Programování</td>
+                                <td>Chybí IDE integrace a exekuce kódu</td>
+                                <td>Cursor, GitHub Copilot, Claude Code</td>
+                            </tr>
+                            <tr>
+                                <td>Citace v akademickém formátu</td>
+                                <td>Neumí BibTeX, RIS, Zotero export</td>
+                                <td>Zotero + Paperguide</td>
+                            </tr>
+                            <tr>
+                                <td>Vysoce citlivá data</td>
+                                <td>Data procházejí přes Google servery</td>
+                                <td>Lokální LLM, Obsidian</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h1>Kam Google s NotebookLM míří</h1>
+
+                    <h2>Co je jasné: NotebookLM jako pilíř Gemini ekosystému</h2>
+                    <p>Google systematicky integruje NotebookLM do svého širšího AI ekosystému. V prosinci 2025 integroval AI nástroje přímo do Workspace plánů — bez potřeby samostatného add-onu. Klíčové signály:</p>
+                    <ul>
+                        <li><strong>Integrace NotebookLM jako zdroje v Gemini app</strong> (leden 2026) — zápisníky se stávají znalostní základnou pro celý Google AI stack</li>
+                        <li><strong>Enterprise API</strong> (září 2025) — programatický přístup naznačuje směřování k B2B monetizaci</li>
+                        <li><strong>NotebookLM Enterprise jako součást Google Cloud</strong> — oddělená enterprise varianta s VPC-SC compliance</li>
+                    </ul>
+
+                    <h2>Co lze odvodit: od pasivního asistenta k aktivnímu agentovi</h2>
+                    <p>Deep Research byl prvním krokem — NotebookLM přestal být jen „čtečkou dokumentů" a stal se agentem, který sám hledá informace. Další logický krok je hlubší automatizace: zápisníky, které se samy aktualizují, proaktivně upozorňují na nové informace nebo automaticky generují reporty.</p>
+
+                    <h2>Mini-timeline: co se kdy objevilo</h2>
+                    <div className="timeline">
+                        <div className="timeline-item">
+                            <div className="timeline-marker"></div>
+                            <div className="timeline-content">
+                                <div className="timeline-date">Květen 2023</div>
+                                <div>Project Tailwind představen na Google I/O</div>
+                            </div>
+                        </div>
+                        <div className="timeline-item">
+                            <div className="timeline-marker"></div>
+                            <div className="timeline-content">
+                                <div className="timeline-date">Říjen 2023</div>
+                                <div>Přejmenování na NotebookLM, zpřístupnění prvním uživatelům</div>
+                            </div>
+                        </div>
+                        <div className="timeline-item">
+                            <div className="timeline-marker"></div>
+                            <div className="timeline-content">
+                                <div className="timeline-date">Září 2024</div>
+                                <div>Audio Overviews — funkce, která NotebookLM proslavila</div>
+                            </div>
+                        </div>
+                        <div className="timeline-item">
+                            <div className="timeline-marker"></div>
+                            <div className="timeline-content">
+                                <div className="timeline-date">Říjen 2024</div>
+                                <div>Odstranění označení „experimentální"</div>
+                            </div>
+                        </div>
+                        <div className="timeline-item">
+                            <div className="timeline-marker"></div>
+                            <div className="timeline-content">
+                                <div className="timeline-date">Prosinec 2024</div>
+                                <div>NotebookLM Plus (placená verze), interaktivní Audio Overviews</div>
+                            </div>
+                        </div>
+                        <div className="timeline-item">
+                            <div className="timeline-marker"></div>
+                            <div className="timeline-content">
+                                <div className="timeline-date">Září 2025</div>
+                                <div>Flashcards, Quizzes, Learning Guide, Enterprise API</div>
+                            </div>
+                        </div>
+                        <div className="timeline-item">
+                            <div className="timeline-marker"></div>
+                            <div className="timeline-content">
+                                <div className="timeline-date">Prosinec 2025</div>
+                                <div>Slide Decks + Data Tables, integrace AI do Workspace plánů</div>
+                            </div>
+                        </div>
+                        <div className="timeline-item">
+                            <div className="timeline-marker"></div>
+                            <div className="timeline-content">
+                                <div className="timeline-date">Leden 2026</div>
+                                <div>NotebookLM jako zdroj v Gemini app</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Section 8: Cheat Sheet
+        function Section8() {
+            return (
+                <div className="section">
+                    <div className="section-intro">
+                        <strong>Tato sekce:</strong> Kompaktní přehled všeho důležitého na jedné stránce. Můžete si ji vytisknout nebo mít otevřenou jako referenci během práce.
+                    </div>
+
+                    <h1>Cheat Sheet — vše na jedné stránce</h1>
+
+                    <h2>Základní pravidla</h2>
+                    <ul>
+                        <li><strong>Jeden zápisník = jedno téma.</strong> Nemíchejte nesouvisející dokumenty.</li>
+                        <li><strong>Kvalita zdrojů {'>'} kvantita.</strong> Raději 10 čistých PDF než 40 nefiltrovaných.</li>
+                        <li><strong>Vždy vyžadujte citace.</strong> Přidejte do promptu: <em>„Každé tvrzení podlož citací."</em></li>
+                        <li><strong>Pojmenovávejte zdroje popisně.</strong> AI vnímá názvy souborů.</li>
+                        <li><strong>Ukládejte cenné odpovědi.</strong> Save to note → Convert to source.</li>
+                    </ul>
+
+                    <h2>Configure Chat — tři režimy</h2>
+                    <ul>
+                        <li><strong>Default</strong> — univerzální</li>
+                        <li><strong>Learning Guide</strong> — vede krok za krokem, klade kontrolní otázky</li>
+                        <li><strong>Custom</strong> — vaše persona, pravidla, formát (až 10 000 znaků)</li>
+                    </ul>
+
+                    <h2>Studio — co generovat kdy</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Potřebuji...</th>
+                                <th>Generuji...</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Přehled</td>
+                                <td>Report (Briefing / Study Guide / FAQ)</td>
+                            </tr>
+                            <tr>
+                                <td>Procvičování</td>
+                                <td>Quiz / Flashcards</td>
+                            </tr>
+                            <tr>
+                                <td>Strukturovaná data</td>
+                                <td>Data Table → Export to Sheets</td>
+                            </tr>
+                            <tr>
+                                <td>Prezentaci</td>
+                                <td>Slide Deck → Google Slides</td>
+                            </tr>
+                            <tr>
+                                <td>Vizuální přehled</td>
+                                <td>Mind Map / Infographic</td>
+                            </tr>
+                            <tr>
+                                <td>Porozumění „na cestě"</td>
+                                <td>Audio Overview (Deep Dive / Brief / Critique / Debate)</td>
+                            </tr>
+                            <tr>
+                                <td>Video explainer</td>
+                                <td>Video Overview (Pro/Ultra)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>Univerzální prompt šablona</h2>
+                    <PromptCard
+                        tag="Šablona"
+                        text={`[Role]: Jsi [typ experta].
+[Úkol]: Udělaj [konkrétní artefakt] z [vybraných zdrojů].
+[Důkazy]: Každé tvrzení podlož citací. Pokud něco ve zdrojích není, napiš "nenalezeno".
+[Formát]: [Tabulka / odrážky / checklist / JSON].
+[Kontrola]: Na konci vyjmenuj nejasnosti a navrhni, jaké zdroje chybí.`}
+                    />
+
+                    <h2>Pět pravidel, která vás ochrání před chybami</h2>
+                    <ol>
+                        <li><strong>Nekopírujte výstupy bez kontroly.</strong> Vždy klikněte na citace.</li>
+                        <li><strong>Nastavte Custom Instructions.</strong> Bez nich dostáváte generické odpovědi.</li>
+                        <li><strong>Batchujte prompty.</strong> Jeden strukturovaný prompt = 3–5 jednoduchých otázek.</li>
+                        <li><strong>Archivujte před mazáním.</strong> Convert notes to source → pak teprve mažte originály.</li>
+                        <li><strong>Prohledávání napříč zápisníky neexistuje.</strong> Pojmenovávejte zápisníky popisně a dělejte je tematicky.</li>
+                    </ol>
+
+                    <h2>Klávesové zkratky a tipy</h2>
+                    <ul>
+                        <li><strong>Hover na citaci</strong> = náhled původní pasáže</li>
+                        <li><strong>Klik na citaci</strong> = skok do přesného místa v dokumentu</li>
+                        <li><strong>Odškrtnutí zdroje</strong> = AI ho dočasně ignoruje</li>
+                        <li><strong>Save to note</strong> = zachová formát a citace</li>
+                        <li><strong>Convert to source</strong> = poznámka se stane zdrojem</li>
+                    </ul>
+
+                    <hr style={{ margin: '32px 0', border: 'none', borderTop: '1px solid #E5E7EB' }} />
+
+                    <p style={{ textAlign: 'center', fontSize: '14px', color: '#6B7280' }}>
+                        <em>Příručka sestavena v únoru 2026 na základě oficiální dokumentace Google, komunitních zdrojů a praktických zkušeností power uživatelů.</em>
+                    </p>
+                </div>
+            );
+        }
+
+        // Render aplikace
+        ReactDOM.render(<WorkshopApp />, document.getElementById('root'));
+    </script>
+</body>
+</html>
