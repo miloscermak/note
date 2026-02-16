@@ -1,0 +1,34 @@
+# Netlify konfigurace pro NotebookLM Workshop
+
+[build]
+  # Žádný build proces není potřeba - jde o statický HTML
+  publish = "."
+
+# Přesměrování pro čistší URL
+[[redirects]]
+  from = "/"
+  to = "/workshop.html"
+  status = 200
+
+[[redirects]]
+  from = "/workshop"
+  to = "/workshop.html"
+  status = 200
+
+# Hlavičky pro lepší performance
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  for = "/workshop.html"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
