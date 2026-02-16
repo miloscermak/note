@@ -1,4 +1,24 @@
-# CLAUDE.md — Online workshop: Second Brain s NotebookLM
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+---
+
+# Online workshop: Second Brain s NotebookLM
+
+## Aktuální stav projektu
+
+**Fáze:** Před implementací
+
+**Struktura repozitáře:**
+- `second-brain-notebooklm.md` — kompletní zdrojový materiál (50 400 znaků, 15 kapitol)
+- `CLAUDE.md` — tento soubor s designovou specifikací
+- Zatím neexistuje: `workshop.html` nebo jiná implementace
+
+**Workflow:**
+1. Všechen obsah pochází z `second-brain-notebooklm.md`
+2. Výstupem bude jeden self-contained HTML soubor (`workshop.html`)
+3. Po změnách commitovat s jasnými anglickými commit messages
 
 ## Koncept projektu
 
@@ -164,3 +184,30 @@ Jeden soubor uložený jako React artifact (`.jsx`), který se renderuje v Claud
 - Progress tracking je "nice to have" pro workshop zážitek, ale nesmí blokovat navigaci.
 - Sidebar navigace musí být jasná a umožnit skok na libovolnou sekci.
 - Na mobilu musí být vše čitelné a použitelné — účastníci workshopu často sedí s telefonem.
+
+## Příkazy pro vývoj
+
+**Vývoj:**
+- Projekt nemá build systém — jde o single-file HTML/React artefakt
+- Pro vývoj stačí otevřít `workshop.html` v prohlížeči
+- Testování: otevřít v různých prohlížečích (Chrome, Firefox, Safari) a na mobilu
+
+**Git workflow:**
+```bash
+git status                                    # Zkontrolovat aktuální stav
+git add workshop.html                         # Přidat změny
+git commit -m "Add interactive prompt cards"  # Commit (anglicky, imperativ)
+git log --oneline -5                          # Zobrazit poslední commity
+```
+
+**Práce se zdrojovým materiálem:**
+```bash
+# Zobrazit strukturu kapitol
+grep "^##" second-brain-notebooklm.md
+
+# Najít konkrétní sekci (např. knihovna promptů)
+grep -A 20 "Knihovna promptů" second-brain-notebooklm.md
+
+# Spočítat počet promptů
+grep -c "^###" second-brain-notebooklm.md
+```
