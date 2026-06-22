@@ -882,8 +882,8 @@
 
                     <p>V odborném žargonu se tomuto přístupu říká "source-grounded cognition" — uzemněná kognice. V praxi to znamená dramaticky nižší míru halucinací (přibližně 13 %) ve srovnání s neuzemněnými modely (kolem 40 %).</p>
 
-                    <h2>Pod kapotou: Gemini 3</h2>
-                    <p>NotebookLM v únoru 2026 pohání model Gemini 3, který přináší výrazně lepší reasoning (uvažování), multimodální porozumění (text + obrázky + audio) a nižší míru chyb při práci s hustým odborným textem. Kontextové okno pojme až 1 milion tokenů napříč celým zápisníkem.</p>
+                    <h2>Pod kapotou: Gemini 3.5</h2>
+                    <p>NotebookLM od června 2026 pohání rodina modelů <strong>Gemini 3.5</strong> (ve výchozím nastavení odbavuje dotazy úsporný a rychlý <strong>Gemini 3.5 Flash</strong>). Přináší výrazně lepší reasoning (uvažování), multimodální porozumění (text + obrázky + audio) a nižší míru chyb při práci s hustým odborným textem. Google uvádí, že Gemini 3.5 Flash překonává v řadě benchmarků i špičkové konkurenční modely a generuje odpovědi až 4× rychleji. Kontextové okno pojme až 1 milion tokenů napříč celým zápisníkem.</p>
 
                     <h2>Srovnání s běžnými chatboty</h2>
                     <table>
@@ -985,6 +985,7 @@
                             <li><strong>Mind mapa</strong> — vizuální přehled vztahů mezi koncepty</li>
                             <li><strong>Infografika</strong> — jednostránkové vizuální shrnutí</li>
                         </ul>
+                        <p><strong>Novinka (červen 2026):</strong> výstupy už nezůstávají v rozhraní NotebookLM. Díky vlastnímu cloud computeru (viz níže) lze report nebo data vyexportovat rovnou jako <strong>.docx (Word), .pptx (PowerPoint), .xlsx (Excel), PDF, Markdown, .csv nebo .json</strong>, případně jako grafy a vizualizace (.png / .svg). Tím se NotebookLM napojí na zbytek vašeho workflow bez kopírování přes schránku.</p>
                     </AccordionItem>
 
                     <AccordionItem title="Poznámky (Notes)">
@@ -1001,6 +1002,18 @@
 
                     <AccordionItem title="Fast Research">
                         <p>Rychlé vyhledání zdrojů (z webu nebo Google Drive) přímo v panelu Sources. Méně hloubkové než Deep Research, ale rychlejší na doplnění konkrétních materiálů.</p>
+                    </AccordionItem>
+
+                    <AccordionItem title="Agentický sběr zdrojů (novinka, červen 2026)">
+                        <p>Dřív platilo pravidlo: nejdřív nahraj zdroje, pak se ptej. Od června 2026 to už neplatí. Můžete začít prázdným zápisníkem, popsat v chatu, co řešíte, a NotebookLM vám sám pomůže <strong>postavit znalostní bázi od nuly</strong> — navrhuje konkrétní zdroje pomocí svých výzkumných dovedností a Google Search a rovnou je přidává mezi zdroje. Z pasivní „čtečky dokumentů" se tak stává aktivní rešeršní asistent.</p>
+                    </AccordionItem>
+
+                    <AccordionItem title="Cloud computer a spouštění kódu (novinka, červen 2026)">
+                        <p>Každý zápisník má nově k dispozici vlastní <strong>zabezpečený cloud computer</strong> (sandboxovaný virtuální stroj), na kterém umí NotebookLM na pozadí psát a spouštět kód — zatímco vy se ptáte normální češtinou. K tomu má přes <strong>100 předpřipravených „software skills"</strong> pro kvalitnější výstupy a využívá Google Antigravity, který si úkol rozdělí mezi více agentů pracujících paralelně. V praxi: čistší tabulky a grafy, spolehlivější extrakce dat a export do reálných souborů (Word, Excel, PowerPoint, PDF, JSON).</p>
+                    </AccordionItem>
+
+                    <AccordionItem title="Paměť a transparentní reasoning (novinka, červen 2026)">
+                        <p>NotebookLM si nově <strong>pamatuje předchozí interakce</strong> v rámci platformy a udržuje kontinuitu napříč relacemi (funguje nezávisle na ostatních službách Google a paměť lze spravovat nebo úplně vypnout). V chatu navíc vidíte <strong>jednotlivé kroky, jak AI k odpovědi došla</strong> — což usnadňuje ověřování a budování důvěry ve výstup.</p>
                     </AccordionItem>
 
                     <AccordionItem title="Data Tables">
@@ -1030,7 +1043,7 @@
                     </div>
 
                     <h1>Cenové plány a limity</h1>
-                    <p>Přehled toho, co dostanete zdarma a za co se platí. Konkrétní čísla k únoru 2026.</p>
+                    <p>Přehled toho, co dostanete zdarma a za co se platí. Konkrétní čísla k červnu 2026.</p>
 
                     <table>
                         <thead>
@@ -1039,7 +1052,7 @@
                                 <th>Free</th>
                                 <th>Plus</th>
                                 <th>Pro ($19.99/měs.)</th>
-                                <th>Ultra ($249.99/měs.)</th>
+                                <th>Ultra (od $99.99/měs.)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1055,7 +1068,7 @@
                                 <td>50</td>
                                 <td>100</td>
                                 <td>300</td>
-                                <td>600</td>
+                                <td>500–600</td>
                             </tr>
                             <tr>
                                 <td><strong>Limit slov na zdroj</strong></td>
@@ -1067,30 +1080,30 @@
                             <tr>
                                 <td><strong>Chat dotazy denně</strong></td>
                                 <td>50</td>
-                                <td>~100</td>
-                                <td>~250–500</td>
-                                <td>~2 500–5 000</td>
+                                <td>200</td>
+                                <td>500</td>
+                                <td>2 500–5 000</td>
                             </tr>
                             <tr>
                                 <td><strong>Audio Overviews denně</strong></td>
                                 <td>3</td>
-                                <td>~6</td>
-                                <td>~20</td>
-                                <td>~200</td>
+                                <td>6</td>
+                                <td>20</td>
+                                <td>100–200</td>
                             </tr>
                             <tr>
                                 <td><strong>Deep Research</strong></td>
                                 <td>10 relací/měs.</td>
+                                <td>3 relace/den</td>
                                 <td>20 relací/den</td>
-                                <td>50 relací/den</td>
-                                <td>200 relací/den</td>
+                                <td>75–200 relací/den</td>
                             </tr>
                             <tr>
                                 <td><strong>Video Overviews</strong></td>
                                 <td>Ne</td>
                                 <td>Ne</td>
                                 <td>Omezeně</td>
-                                <td>Ano (plná kvalita)</td>
+                                <td>Ano (vč. Cinematic)</td>
                             </tr>
                             <tr>
                                 <td><strong>Týmové zápisníky</strong></td>
@@ -1102,7 +1115,9 @@
                         </tbody>
                     </table>
 
-                    <p><strong>Poznámka:</strong> Google uvádí, že usage limity se mohou měnit. Čísla v tabulce jsou orientační k únoru 2026. Pokud vám v UI ukazuje jiná čísla, platí ta aktuální.</p>
+                    <p><strong>Plán Ultra se rozdělil.</strong> Od I/O 2026 (květen) existují dvě varianty Ultra: levnější (~$99.99/měs., 20 TB úložiště, ~500 zdrojů, ~2 500 dotazů/den) a dražší (~$200/měs., 30 TB, ~600 zdrojů, ~5 000 dotazů/den, víc Cinematic Video Overviews). Sloupec Ultra v tabulce výše proto uvádí rozpětí mezi oběma.</p>
+
+                    <p><strong>Poznámka:</strong> Ceny i usage limity se průběžně mění. Čísla v tabulce jsou orientační k červnu 2026. Vždy platí to, co vám ukazuje vaše rozhraní — aktuální hodnoty najdete v nápovědě Google na <strong>support.google.com/notebooklm</strong>.</p>
 
                     <p><strong>Pro většinu uživatelů bohatě stačí Free tier.</strong> Pokud narazíte na limity (typicky 50 dotazů denně nebo 50 zdrojů na zápisník), první řešení je optimalizace workflow (viz tipy níže), ne upgrade.</p>
                 </div>
@@ -1653,8 +1668,9 @@
                         <li><strong>NotebookLM Enterprise jako součást Google Cloud</strong> — oddělená enterprise varianta s VPC-SC compliance</li>
                     </ul>
 
-                    <h2>Co lze odvodit: od pasivního asistenta k aktivnímu agentovi</h2>
-                    <p>Deep Research byl prvním krokem — NotebookLM přestal být jen "čtečkou dokumentů" a stal se agentem, který sám hledá informace. Další logický krok je hlubší automatizace: zápisníky, které se samy aktualizují, proaktivně upozorňují na nové informace nebo automaticky generují reporty.</p>
+                    <h2>Od pasivního asistenta k aktivnímu agentovi — už se to děje</h2>
+                    <p>Deep Research byl prvním krokem — NotebookLM přestal být jen "čtečkou dokumentů" a stal se agentem, který sám hledá informace. Velký update z června 2026 ten posun dokončil: <strong>agentický sběr zdrojů</strong> (zápisník si znalostní bázi pomůže postavit sám z chatu), <strong>vlastní cloud computer se spouštěním kódu</strong> a <strong>paměť napříč relacemi</strong>. Z nástroje na čtení se stal nástroj, který za vás aktivně pracuje.</p>
+                    <p>Další logický krok, který lze očekávat: zápisníky, které se samy aktualizují podle změn ve zdrojích, proaktivně upozorňují na nové informace a generují reporty bez vyžádání.</p>
 
                     <h2>Mini-timeline: co se kdy objevilo</h2>
                     <div className="timeline">
@@ -1712,6 +1728,20 @@
                             <div className="timeline-content">
                                 <div className="timeline-date">Leden 2026</div>
                                 <div>NotebookLM jako zdroj v Gemini app</div>
+                            </div>
+                        </div>
+                        <div className="timeline-item">
+                            <div className="timeline-marker"></div>
+                            <div className="timeline-content">
+                                <div className="timeline-date">Květen 2026</div>
+                                <div>Google I/O — plán Ultra se dělí na dvě varianty (20 TB / 30 TB)</div>
+                            </div>
+                        </div>
+                        <div className="timeline-item">
+                            <div className="timeline-marker"></div>
+                            <div className="timeline-content">
+                                <div className="timeline-date">Červen 2026</div>
+                                <div>Velký update: Gemini 3.5, agentický sběr zdrojů, vlastní cloud computer se spouštěním kódu, paměť a export do Word/Excel/PowerPoint/PDF</div>
                             </div>
                         </div>
                     </div>
@@ -1816,7 +1846,7 @@
                     <hr style={{ margin: '32px 0', border: 'none', borderTop: '1px solid #E5E7EB' }} />
 
                     <p style={{ textAlign: 'center', fontSize: '14px', color: '#6B7280' }}>
-                        <em>Příručka sestavena v únoru 2026 na základě oficiální dokumentace Google, komunitních zdrojů a praktických zkušeností power uživatelů.</em>
+                        <em>Příručka sestavena v únoru 2026, aktualizováno k červnu 2026 (Gemini 3.5 update) na základě oficiální dokumentace Google, komunitních zdrojů a praktických zkušeností power uživatelů.</em>
                     </p>
                 </div>
             );
