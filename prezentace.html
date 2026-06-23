@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Second Brain s NotebookLM — Prezentace workshopu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FFFFFF;
+            --bg-soft: #F8F9FA;
+            --text: #1A1A2E;
+            --text-soft: #6B7280;
+            --accent: #4F46E5;
+            --accent-soft: #EEF2FF;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --border: #E5E7EB;
+            --prompt-bg: #1E293B;
+            --prompt-text: #E2E8F0;
+            --card-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        }
+
+        body.dark {
+            --bg: #0F172A;
+            --bg-soft: #1E293B;
+            --text: #E2E8F0;
+            --text-soft: #94A3B8;
+            --accent: #818CF8;
+            --accent-soft: #1E293B;
+            --border: #334155;
+            --prompt-bg: #334155;
+            --prompt-text: #F1F5F9;
+            --card-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body { height: 100%; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* === Deck === */
+        .deck {
+            position: fixed;
+            inset: 0;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 64px 88px 96px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(12px);
+            transition: opacity 0.35s ease, transform 0.35s ease;
+            overflow-y: auto;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .slide-inner {
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* === Typografie === */
+        h1 { font-size: 44px; font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 24px; }
+        h2 { font-size: 26px; font-weight: 700; margin-bottom: 16px; color: var(--accent); }
+        h3 { font-size: 18px; font-weight: 700; margin: 18px 0 10px; }
+        p { font-size: 20px; line-height: 1.55; margin-bottom: 14px; color: var(--text); }
+        .lead { font-size: 24px; color: var(--text-soft); }
+        ul, ol { margin: 8px 0 14px 26px; }
+        li { font-size: 19px; line-height: 1.5; margin-bottom: 8px; }
+        strong { font-weight: 700; }
+        em { color: var(--text-soft); }
+        .muted { color: var(--text-soft); font-size: 17px; }
+        .big { font-size: 34px; line-height: 1.3; font-weight: 700; }
+
+        .eyebrow {
+            display: inline-block;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+
+        .highlight { color: var(--accent); }
+
+        /* === Title slide === */
+        .slide.title { text-align: center; align-items: center; }
+        .slide.title h1 { font-size: 60px; }
+        .slide.title .lead { font-size: 26px; max-width: 760px; }
+        .title-badge {
+            display: inline-flex; gap: 8px; align-items: center;
+            background: var(--accent-soft); color: var(--accent);
+            padding: 8px 18px; border-radius: 999px; font-weight: 700; font-size: 15px;
+            margin-bottom: 28px;
+        }
+        body.dark .title-badge { color: var(--prompt-text); }
+
+        /* === Divider slides === */
+        .slide.divider {
+            background: linear-gradient(135deg, var(--accent) 0%, #6366F1 100%);
+            color: #fff;
+        }
+        .slide.divider h1, .slide.divider h2, .slide.divider p, .slide.divider .eyebrow, .slide.divider li { color: #fff; }
+        .slide.divider .eyebrow { color: rgba(255,255,255,0.85); }
+        .divider-num {
+            font-size: 120px; font-weight: 800; line-height: 1;
+            opacity: 0.35; margin-bottom: 8px;
+        }
+        .slide.divider .ref-link { background: rgba(255,255,255,0.18); color: #fff; border-color: rgba(255,255,255,0.4); }
+        .slide.divider .ref-link:hover { background: rgba(255,255,255,0.28); }
+
+        /* === Cards / grid === */
+        .grid { display: grid; gap: 18px; }
+        .grid.cols-2 { grid-template-columns: 1fr 1fr; }
+        .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+        .card {
+            background: var(--bg-soft);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px 22px;
+        }
+        .card h3 { margin-top: 0; color: var(--accent); }
+        .card p, .card li { font-size: 17px; margin-bottom: 6px; }
+
+        .pill {
+            display: inline-block; font-size: 13px; font-weight: 700;
+            padding: 3px 10px; border-radius: 999px;
+            background: var(--accent-soft); color: var(--accent); margin-bottom: 10px;
+        }
+        body.dark .pill { color: var(--prompt-text); }
+
+        /* === Tabulky === */
+        table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 16px; }
+        th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        th { color: var(--accent); font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.04em; }
+        tbody tr:hover { background: var(--bg-soft); }
+        td strong { color: var(--text); }
+
+        /* === Prompt karty === */
+        .prompt {
+            position: relative;
+            background: var(--prompt-bg);
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin: 12px 0;
+        }
+        .prompt .prompt-tag {
+            display: inline-block; font-size: 12px; font-weight: 700;
+            letter-spacing: 0.05em; text-transform: uppercase;
+            color: #A5B4FC; margin-bottom: 8px;
+        }
+        .prompt pre {
+            font-family: 'Inter', sans-serif;
+            font-size: 16px; line-height: 1.5;
+            color: var(--prompt-text);
+            white-space: pre-wrap; word-wrap: break-word;
+            margin: 0; padding-right: 90px;
+        }
+        .copy-btn {
+            position: absolute; top: 14px; right: 14px;
+            background: rgba(255,255,255,0.1); color: #E2E8F0;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px; padding: 6px 12px; font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: all 0.2s; font-family: inherit;
+        }
+        .copy-btn:hover { background: rgba(255,255,255,0.2); }
+        .copy-btn.copied { background: var(--success); border-color: var(--success); color: #fff; }
+
+        .prompt.compact { padding: 14px 16px; margin: 8px 0; }
+        .prompt.compact pre { font-size: 14.5px; }
+
+        /* === RAG diagram === */
+        .rag-flow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 20px 0; }
+        .rag-step {
+            background: var(--accent-soft); color: var(--accent);
+            border: 2px solid var(--accent); border-radius: 12px;
+            padding: 16px 20px; font-weight: 700; font-size: 17px; text-align: center;
+        }
+        body.dark .rag-step { color: var(--prompt-text); background: var(--bg-soft); }
+        .rag-arrow { color: var(--accent); font-size: 26px; font-weight: 700; }
+
+        /* === Do / Don't === */
+        .do-card { border-left: 5px solid var(--success); }
+        .dont-card { border-left: 5px solid var(--danger); }
+        .do-card h3 { color: var(--success); }
+        .dont-card h3 { color: var(--danger); }
+
+        /* === Stat === */
+        .stat-row { display: flex; gap: 40px; margin: 24px 0; flex-wrap: wrap; }
+        .stat { }
+        .stat-num { font-size: 52px; font-weight: 800; color: var(--accent); line-height: 1; }
+        .stat-label { font-size: 16px; color: var(--text-soft); margin-top: 6px; }
+
+        /* === Timeline === */
+        .tl { border-left: 3px solid var(--accent); margin-left: 8px; padding-left: 24px; }
+        .tl-item { position: relative; margin-bottom: 16px; }
+        .tl-item::before {
+            content: ''; position: absolute; left: -32px; top: 4px;
+            width: 14px; height: 14px; border-radius: 50%;
+            background: var(--accent); border: 3px solid var(--bg);
+        }
+        .tl-date { font-weight: 700; color: var(--accent); font-size: 16px; }
+        .tl-item div:last-child { font-size: 17px; }
+
+        /* === Reference link === */
+        .ref-link {
+            display: inline-flex; align-items: center; gap: 6px;
+            margin-top: 22px;
+            background: var(--accent-soft); color: var(--accent);
+            border: 1px solid var(--accent); border-radius: 10px;
+            padding: 10px 18px; font-weight: 600; font-size: 16px;
+            text-decoration: none; transition: all 0.2s;
+        }
+        .ref-link:hover { background: var(--accent); color: #fff; }
+
+        /* === Agenda === */
+        .agenda-item {
+            display: flex; align-items: baseline; gap: 16px;
+            padding: 11px 0; border-bottom: 1px solid var(--border);
+        }
+        .agenda-num {
+            font-weight: 800; color: var(--accent); font-size: 20px;
+            min-width: 32px;
+        }
+        .agenda-title { font-size: 19px; font-weight: 600; flex: 1; }
+        .agenda-time { color: var(--text-soft); font-size: 16px; }
+
+        /* === New badge === */
+        .new-badge {
+            display: inline-block; background: var(--success); color: #fff;
+            font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 6px;
+            vertical-align: middle; margin-left: 8px; letter-spacing: 0.03em;
+        }
+
+        /* === Chrome: progress, footer, controls === */
+        .progress {
+            position: fixed; top: 0; left: 0; height: 4px;
+            background: var(--accent); z-index: 100; transition: width 0.3s;
+        }
+
+        .top-controls {
+            position: fixed; top: 16px; right: 20px; z-index: 100;
+            display: flex; gap: 10px;
+        }
+        .ctrl-btn {
+            background: var(--bg-soft); color: var(--text);
+            border: 1px solid var(--border); border-radius: 9px;
+            padding: 8px 14px; font-size: 14px; font-weight: 600;
+            cursor: pointer; font-family: inherit; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 6px;
+            transition: all 0.2s;
+        }
+        .ctrl-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .ctrl-btn[hidden] { display: none; }
+
+        .footer {
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 90;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 24px;
+            background: var(--bg);
+            border-top: 1px solid var(--border);
+            font-size: 14px; color: var(--text-soft);
+        }
+        .footer-block { font-weight: 600; color: var(--text); }
+        .nav-arrows { display: flex; gap: 8px; align-items: center; }
+        .arrow {
+            background: var(--bg-soft); color: var(--text);
+            border: 1px solid var(--border); border-radius: 9px;
+            width: 38px; height: 34px; font-size: 18px; cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center;
+            transition: all 0.2s; font-family: inherit;
+        }
+        .arrow:hover { border-color: var(--accent); color: var(--accent); }
+        .counter { min-width: 64px; text-align: center; font-variant-numeric: tabular-nums; }
+
+        .hint {
+            position: fixed; bottom: 58px; left: 50%; transform: translateX(-50%);
+            background: var(--text); color: var(--bg); padding: 7px 16px;
+            border-radius: 999px; font-size: 13px; opacity: 0.85; z-index: 95;
+            transition: opacity 0.5s;
+        }
+
+        /* === Responsivita === */
+        @media (max-width: 768px) {
+            .slide { padding: 56px 22px 92px; }
+            h1 { font-size: 30px; }
+            .slide.title h1 { font-size: 38px; }
+            .slide.divider h1 { font-size: 30px; }
+            .divider-num { font-size: 76px; }
+            h2 { font-size: 21px; }
+            p, .lead { font-size: 17px; }
+            li { font-size: 16px; }
+            .grid.cols-2, .grid.cols-3 { grid-template-columns: 1fr; }
+            .big { font-size: 24px; }
+            table { font-size: 13px; }
+            th, td { padding: 7px 8px; }
+            .stat-num { font-size: 40px; }
+            .top-controls .label-txt { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="progress" id="progress"></div>
+
+    <div class="top-controls">
+        <a class="ctrl-btn" id="refBtn" href="workshop.html" target="_blank" rel="noopener">📖 <span class="label-txt">Příručka</span></a>
+        <button class="ctrl-btn" id="darkBtn">🌙 <span class="label-txt">Tmavý</span></button>
+    </div>
+
+    <div class="deck" id="deck">
+
+        <!-- 1 — Titulní -->
+        <section class="slide title" data-block="0" data-name="Úvod">
+            <div class="slide-inner">
+                <div class="title-badge">🧠 Online workshop · ~2 hodiny</div>
+                <h1>Second Brain<br>s NotebookLM</h1>
+                <p class="lead">Jak z Googlu NotebookLM udělat svůj druhý mozek — od prvního zápisníku po pokročilé workflow s citacemi, prompty a Studiem.</p>
+                <p class="muted" style="margin-top:24px">Stav k červnu 2026 · poháněno Gemini 3.5</p>
+            </div>
+        </section>
+
+        <!-- 2 — Agenda -->
+        <section class="slide" data-block="0" data-name="Úvod">
+            <div class="slide-inner">
+                <span class="eyebrow">Program</span>
+                <h1>Co nás dnes čeká</h1>
+                <div class="agenda-item"><span class="agenda-num">1</span><span class="agenda-title">Úvod: Proč NotebookLM</span><span class="agenda-time">~10 min</span></div>
+                <div class="agenda-item"><span class="agenda-num">2</span><span class="agenda-title">Klíčové koncepty</span><span class="agenda-time">~15 min</span></div>
+                <div class="agenda-item"><span class="agenda-num">3</span><span class="agenda-title">Plány a limity</span><span class="agenda-time">~5 min</span></div>
+                <div class="agenda-item"><span class="agenda-num">4</span><span class="agenda-title">Hands-on: První zápisník</span><span class="agenda-time">~20 min</span></div>
+                <div class="agenda-item"><span class="agenda-num">5</span><span class="agenda-title">Příprava zdrojů</span><span class="agenda-time">~15 min</span></div>
+                <div class="agenda-item"><span class="agenda-num">6</span><span class="agenda-title">Workflow a prompty</span><span class="agenda-time">~25 min</span></div>
+                <div class="agenda-item"><span class="agenda-num">7</span><span class="agenda-title">Tipy, triky a chyby</span><span class="agenda-time">~15 min</span></div>
+                <div class="agenda-item"><span class="agenda-num">8</span><span class="agenda-title">Strategie, budoucnost a cheat sheet</span><span class="agenda-time">~10 min</span></div>
+            </div>
+        </section>
+
+        <!-- 3 — Jak používat -->
+        <section class="slide" data-block="0" data-name="Úvod">
+            <div class="slide-inner">
+                <span class="eyebrow">Než začneme</span>
+                <h1>Jak ovládat tuto prezentaci</h1>
+                <div class="grid cols-3">
+                    <div class="card"><h3>⌨️ Navigace</h3><p>Šipky <strong>← →</strong> nebo mezerník. Klikem do plochy přejdete dál. <strong>Home</strong> / <strong>End</strong> skočí na začátek/konec.</p></div>
+                    <div class="card"><h3>📋 Prompty</h3><p>U každého promptu je tlačítko <strong>Kopírovat</strong> — zkopíruje text do schránky, můžete ho rovnou vložit do NotebookLM.</p></div>
+                    <div class="card"><h3>📖 Příručka</h3><p>Tlačítko <strong>Příručka</strong> vpravo nahoře otevře k danému bloku detailní text v nové záložce.</p></div>
+                </div>
+                <p class="muted" style="margin-top:18px">Tip: tlačítkem 🌙 vpravo nahoře přepnete tmavý režim — vhodné do zatemněné místnosti.</p>
+            </div>
+        </section>
+
+        <!-- ============ BLOK 1 ============ -->
+        <section class="slide divider" data-block="1" data-name="Blok 1 · Úvod" data-ref="0">
+            <div class="slide-inner">
+                <div class="divider-num">1</div>
+                <span class="eyebrow">~10 min</span>
+                <h1>Proč NotebookLM</h1>
+                <p class="lead" style="max-width:680px">Jak vznikl, jaký problém řeší a proč je technicky jiný než běžné chatboty.</p>
+                <a class="ref-link" href="workshop.html#sekce-0" target="_blank" rel="noopener">📖 Otevřít v příručce ↗</a>
+            </div>
+        </section>
+
+        <section class="slide" data-block="1" data-name="Blok 1 · Úvod" data-ref="0">
+            <div class="slide-inner">
+                <span class="eyebrow">Problém</span>
+                <h1>Problém „zahlceného čtenáře“</h1>
+                <p class="big">ChatGPT vyřešil problém prázdné stránky — pomáhá <span class="highlight">psát</span>.</p>
+                <p>Ale studenti, analytici a výzkumníci se topí v PDF, přednáškách a reportech. Nepotřebují AI, která napíše báseň o pirátovi. Potřebují AI, která jim <strong>řekne, co je v tom padesátistránkovém dokumentu — a nebude si vymýšlet</strong>.</p>
+                <p class="muted">Přesně tuhle mezeru našel v roce 2022 malý tým v Google Labs.</p>
+            </div>
+        </section>
+
+        <section class="slide" data-block="1" data-name="Blok 1 · Úvod" data-ref="0">
+            <div class="slide-inner">
+                <span class="eyebrow">Jak vznikl</span>
+                <h1>Od Project Tailwind k NotebookLM</h1>
+                <div class="tl">
+                    <div class="tl-item"><div class="tl-date">2022</div><div>Raiza Martin + autor Steven Johnson staví prototyp. První verze za 6 týdnů.</div></div>
+                    <div class="tl-item"><div class="tl-date">Květen 2023</div><div>Představení na Google I/O pod názvem <strong>Project Tailwind</strong>.</div></div>
+                    <div class="tl-item"><div class="tl-date">Říjen 2023</div><div>Přejmenování na <strong>NotebookLM</strong>, první uživatelé v USA.</div></div>
+                    <div class="tl-item"><div class="tl-date">Říjen 2024</div><div>Konec „experimentální“ fáze.</div></div>
+                    <div class="tl-item"><div class="tl-date">Prosinec 2024</div><div>Placená verze <strong>NotebookLM Plus</strong>.</div></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="slide" data-block="1" data-name="Blok 1 · Úvod" data-ref="0">
+            <div class="slide-inner">
+                <span class="eyebrow">Technický základ</span>
+                <h1>Co je RAG a proč je důležitý</h1>
+                <p>NotebookLM neodpovídá z „celého internetu“, ale <strong>jen z vašich zdrojů</strong>. Tomu se říká RAG — Retrieval-Augmented Generation.</p>
+                <div class="rag-flow">
+                    <div class="rag-step">📄 Dokument</div>
+                    <span class="rag-arrow">→</span>
+                    <div class="rag-step">🔍 Vyhledání pasáže</div>
+                    <span class="rag-arrow">→</span>
+                    <div class="rag-step">✍️ Generování</div>
+                    <span class="rag-arrow">→</span>
+                    <div class="rag-step">🔗 Citace</div>
+                </div>
+                <p>Odborně „source-grounded cognition“ — uzemněná kognice. V praxi: dramaticky méně halucinací.</p>
+            </div>
+        </section>
+
+        <section class="slide" data-block="1" data-name="Blok 1 · Úvod" data-ref="0">
+            <div class="slide-inner">
+                <span class="eyebrow">Srovnání</span>
+                <h1>Běžný chatbot vs. NotebookLM</h1>
+                <div class="stat-row">
+                    <div class="stat"><div class="stat-num">~40 %</div><div class="stat-label">míra halucinací u neuzemněných modelů</div></div>
+                    <div class="stat"><div class="stat-num" style="color:var(--success)">~13 %</div><div class="stat-label">u source-grounded NotebookLM</div></div>
+                </div>
+                <table>
+                    <thead><tr><th>Vlastnost</th><th>Běžný chatbot</th><th>NotebookLM</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Zdroj znalostí</strong></td><td>Celý internet (trénink)</td><td>Vaše nahrané zdroje</td></tr>
+                        <tr><td><strong>Citace</strong></td><td>Většinou žádné</td><td>Klikací, k přesné pasáži</td></tr>
+                        <tr><td><strong>Riziko vymýšlení</strong></td><td>Vysoké (model improvizuje)</td><td>Nízké (drží se zdrojů)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="slide" data-block="1" data-name="Blok 1 · Úvod" data-ref="0">
+            <div class="slide-inner">
+                <span class="eyebrow">Pod kapotou</span>
+                <h1>Gemini 3.5 <span class="new-badge">červen 2026</span></h1>
+                <p>NotebookLM od června 2026 pohání rodina <strong>Gemini 3.5</strong> — ve výchozím nastavení rychlý a úsporný <strong>Gemini 3.5 Flash</strong>.</p>
+                <ul>
+                    <li>Výrazně lepší <strong>reasoning</strong> a multimodální porozumění (text + obrázky + audio)</li>
+                    <li>Nižší míra chyb při hustém odborném textu</li>
+                    <li>Podle Googlu překonává v řadě benchmarků i špičkovou konkurenci a generuje až <strong>4× rychleji</strong></li>
+                    <li>Kontextové okno až <strong>1 milion tokenů</strong> napříč celým zápisníkem</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="slide" data-block="1" data-name="Blok 1 · Úvod" data-ref="0">
+            <div class="slide-inner">
+                <span class="eyebrow">Pro koho</span>
+                <h1>Komu se NotebookLM hodí</h1>
+                <div class="grid cols-2">
+                    <div class="card">
+                        <h3>Ideální pro</h3>
+                        <ul>
+                            <li>Studenty a učící se (zkoušky, kurzy)</li>
+                            <li>Autory a analytiky (rešerše, validace tvrzení)</li>
+                            <li>Týmy (onboarding, firemní dokumentace)</li>
+                            <li>Kohokoli, kdo si buduje „druhý mozek“</li>
+                        </ul>
+                    </div>
+                    <div class="card dont-card">
+                        <h3>Méně vhodné na</h3>
+                        <ul>
+                            <li>Kreativní brainstorming od nuly → ChatGPT, Claude</li>
+                            <li>Obecné otázky o světě → Perplexity, Gemini</li>
+                            <li>Vysoce citlivá data → lokální nástroje</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ BLOK 2 ============ -->
+        <section class="slide divider" data-block="2" data-name="Blok 2 · Koncepty" data-ref="1">
+            <div class="slide-inner">
+                <div class="divider-num">2</div>
+                <span class="eyebrow">~15 min</span>
+                <h1>Klíčové koncepty</h1>
+                <p class="lead" style="max-width:680px">Slovníček pojmů, který budeme používat celý zbytek workshopu.</p>
+                <a class="ref-link" href="workshop.html#sekce-1" target="_blank" rel="noopener">📖 Otevřít v příručce ↗</a>
+            </div>
+        </section>
+
+        <section class="slide" data-block="2" data-name="Blok 2 · Koncepty" data-ref="1">
+            <div class="slide-inner">
+                <span class="eyebrow">Základní jednotka</span>
+                <h1>Zápisník (Notebook)</h1>
+                <p class="big">Jeden zápisník = jeden projekt, jedno téma, jeden cíl.</p>
+                <p>Obsahuje vaše zdroje, chat, poznámky a výstupy ze Studia.</p>
+                <div class="card dont-card" style="margin-top:14px">
+                    <p style="margin:0"><strong>Důležité omezení:</strong> NotebookLM neumí pracovat napříč více zápisníky a <strong>neexistuje prohledávání všech zápisníků najednou</strong>. Proto děl podle projektů a pojmenovávej popisně.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="slide" data-block="2" data-name="Blok 2 · Koncepty" data-ref="1">
+            <div class="slide-inner">
+                <span class="eyebrow">Vstup</span>
+                <h1>Zdroje (Sources)</h1>
+                <p>To, z čeho NotebookLM čerpá. Podporované formáty:</p>
+                <p class="muted">PDF · Google Docs / Slides / Sheets · webové URL · YouTube URL · audio · obrázky</p>
+                <div class="grid cols-2" style="margin-top:8px">
+                    <div class="card"><h3>Limit na zdroj</h3><p style="margin:0"><strong>500 000 slov / 200 MB.</strong> Přes limit NotebookLM potichu přestane číst.</p></div>
+                    <div class="card"><h3>Statické kopie</h3><p style="margin:0">Když změníte originál, zápisník se <strong>sám neaktualizuje</strong> (u Google Drive jde ručně přesynchronizovat).</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="slide" data-block="2" data-name="Blok 2 · Koncepty" data-ref="1">
+            <div class="slide-inner">
+                <span class="eyebrow">Srdce systému</span>
+                <h1>Citace</h1>
+                <p class="big">Ke každé odpovědi NotebookLM připojí čísla odkazující na <span class="highlight">konkrétní pasáže</span> ve vašich zdrojích.</p>
+                <ul>
+                    <li><strong>Hover</strong> na citaci → náhled původního textu</li>
+                    <li><strong>Klik</strong> na citaci → skok přímo na přesné místo v dokumentu</li>
+                </ul>
+                <p class="muted">Tohle je zásadní rozdíl oproti chatbotům, kde se pohybujete jen v „pravděpodobnostech“.</p>
+            </div>
+        </section>
+
+        <section class="slide" data-block="2" data-name="Blok 2 · Koncepty" data-ref="1">
+            <div class="slide-inner">
+                <span class="eyebrow">Výstupy</span>
+                <h1>Studio</h1>
+                <p>Panel vpravo, kde generujete výstupy jedním kliknutím:</p>
+                <div class="grid cols-2">
+                    <div class="card">
+                        <ul style="margin-bottom:0">
+                            <li><strong>Report</strong> — Briefing / Study Guide / FAQ</li>
+                            <li><strong>Audio Overview</strong> — AI podcast (Deep Dive, Brief, Critique, Debate)</li>
+                            <li><strong>Video Overview</strong> — narativní video (Pro/Ultra)</li>
+                            <li><strong>Slide Deck</strong> — prezentace do Google Slides</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <ul style="margin-bottom:0">
+                            <li><strong>Data Table</strong> — tabulka s exportem do Sheets</li>
+                            <li><strong>Flashcards a kvízy</strong> — aktivní učení</li>
+                            <li><strong>Mind mapa</strong> — vztahy mezi koncepty</li>
+                            <li><strong>Infografika</strong> — vizuální shrnutí</li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="muted" style="margin-top:10px"><strong>Novinka:</strong> export do .docx, .pptx, .xlsx, PDF, .csv, .json a grafů (.png/.svg).</p>
+            </div>
+        </section>
+
+        <section class="slide" data-block="2" data-name="Blok 2 · Koncepty" data-ref="1">
+            <div class="slide-inner">
+                <span class="eyebrow">Řízení a paměť</span>
+                <h1>Poznámky a Configure Chat</h1>
+                <div class="grid cols-2">
+                    <div class="card"><h3>Poznámky (Notes)</h3><p style="margin:0">Odpovědi uložíte přes <strong>Save to note</strong> (zachová formát i citace). Klíčová funkce: <strong>Convert to source</strong> — z poznámky se stane „kanonická“ součást znalostní báze.</p></div>
+                    <div class="card"><h3>Configure Chat</h3><p style="margin:0">Styl pro celý zápisník: <strong>Default</strong> / <strong>Learning Guide</strong> / <strong>Custom</strong>. U Custom máte <strong>až 10 000 znaků</strong> na plnohodnotnou personu.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="slide" data-block="2" data-name="Blok 2 · Koncepty" data-ref="1">
+            <div class="slide-inner">
+                <span class="eyebrow">Výzkum</span>
+                <h1>Deep Research &amp; Fast Research</h1>
+                <div class="grid cols-2">
+                    <div class="card"><h3>Deep Research</h3><p style="margin:0">Autonomní agent prohledá web, najde <strong>~50 kvalitních zdrojů</strong> a sestaví citovanou zprávu. Skvělé na rychlou bibliografii k novému tématu.</p></div>
+                    <div class="card"><h3>Fast Research</h3><p style="margin:0">Rychlé vyhledání zdrojů (web / Google Drive) přímo v panelu Sources. Méně hloubkové, ale rychlejší na doplnění konkrétních materiálů.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="slide" data-block="2" data-name="Blok 2 · Koncepty" data-ref="1">
+            <div class="slide-inner">
+                <span class="eyebrow">Velký update</span>
+                <h1>Co je nové v červnu 2026 <span class="new-badge">NEW</span></h1>
+                <div class="grid cols-2">
+                    <div class="card"><h3>🔎 Agentický sběr zdrojů</h3><p style="margin:0">Začnete prázdným zápisníkem, popíšete téma v chatu — a NotebookLM vám sám pomůže <strong>postavit znalostní bázi</strong> (navrhuje zdroje přes Google Search).</p></div>
+                    <div class="card"><h3>💻 Cloud computer + kód</h3><p style="margin:0">Každý zápisník má vlastní sandbox, kde umí <strong>psát a spouštět kód</strong> (100+ „software skills“, Antigravity). Čistší tabulky, grafy, exporty.</p></div>
+                    <div class="card"><h3>🧠 Paměť napříč relacemi</h3><p style="margin:0">Pamatuje si předchozí interakce a udržuje kontinuitu. Lze spravovat i úplně vypnout.</p></div>
+                    <div class="card"><h3>🔬 Transparentní reasoning</h3><p style="margin:0">V chatu vidíte <strong>jednotlivé kroky</strong>, jak AI k odpovědi došla — snazší ověřování.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ BLOK 3 ============ -->
+        <section class="slide divider" data-block="3" data-name="Blok 3 · Plány" data-ref="2">
+            <div class="slide-inner">
+                <div class="divider-num">3</div>
+                <span class="eyebrow">~5 min</span>
+                <h1>Plány a limity</h1>
+                <p class="lead" style="max-width:680px">Co dostanete zdarma a za co se platí. Čísla k červnu 2026.</p>
+                <a class="ref-link" href="workshop.html#sekce-2" target="_blank" rel="noopener">📖 Otevřít v příručce ↗</a>
+            </div>
+        </section>
+
+        <section class="slide" data-block="3" data-name="Blok 3 · Plány" data-ref="2">
+            <div class="slide-inner">
+                <span class="eyebrow">Cenové plány</span>
+                <h1>Free · Plus · Pro · Ultra</h1>
+                <table>
+                    <thead><tr><th>Vlastnost</th><th>Free</th><th>Plus</th><th>Pro<br>$19.99</th><th>Ultra<br>od $99.99</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Zápisníky</strong></td><td>100</td><td>200</td><td>500</td><td>500</td></tr>
+                        <tr><td><strong>Zdroje / zápisník</strong></td><td>50</td><td>100</td><td>300</td><td>500–600</td></tr>
+                        <tr><td><strong>Chat dotazy / den</strong></td><td>50</td><td>200</td><td>500</td><td>2 500–5 000</td></tr>
+                        <tr><td><strong>Audio Overviews / den</strong></td><td>3</td><td>6</td><td>20</td><td>100–200</td></tr>
+                        <tr><td><strong>Deep Research</strong></td><td>10/měs.</td><td>3/den</td><td>20/den</td><td>75–200/den</td></tr>
+                        <tr><td><strong>Video Overviews</strong></td><td>Ne</td><td>Ne</td><td>Omezeně</td><td>Ano (vč. Cinematic)</td></tr>
+                    </tbody>
+                </table>
+                <p class="muted">Limit slov na zdroj je u všech plánů 500 000.</p>
+            </div>
+        </section>
+
+        <section class="slide" data-block="3" data-name="Blok 3 · Plány" data-ref="2">
+            <div class="slide-inner">
+                <span class="eyebrow">Doporučení</span>
+                <h1>Co si z toho odnést</h1>
+                <p class="big" style="color:var(--success)">Pro většinu uživatelů bohatě stačí Free tier.</p>
+                <p>Když narazíte na limit (typicky 50 dotazů denně nebo 50 zdrojů na zápisník), první řešení je <strong>optimalizace workflow</strong>, ne upgrade.</p>
+                <div class="card" style="margin-top:8px">
+                    <p style="margin:0"><strong>Ultra se na I/O 2026 rozdělila na dva SKU:</strong> ~$99.99 (20 TB, ~500 zdrojů) a ~$200 (30 TB, ~600 zdrojů, víc Cinematic Video). Ceny i limity se mění — aktuální platí to ve vašem rozhraní.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ BLOK 4 ============ -->
+        <section class="slide divider" data-block="4" data-name="Blok 4 · Hands-on" data-ref="3">
+            <div class="slide-inner">
+                <div class="divider-num">4</div>
+                <span class="eyebrow">~20 min · hands-on</span>
+                <h1>Teď si to vyzkoušejte</h1>
+                <p class="lead" style="max-width:720px">Od nuly k prvnímu výstupu za 15 minut. Otevřete si <strong>notebooklm.google.com</strong> a jdeme na to spolu.</p>
+                <a class="ref-link" href="workshop.html#sekce-3" target="_blank" rel="noopener">📖 Otevřít v příručce ↗</a>
+            </div>
+        </section>
+
+        <section class="slide" data-block="4" data-name="Blok 4 · Hands-on" data-ref="3">
+            <div class="slide-inner">
+                <span class="eyebrow">Krok 1 &amp; 2</span>
+                <h1>Zápisník + zdroje</h1>
+                <div class="grid cols-2">
+                    <div class="card"><h3>1 · Zápisník s jasným záměrem</h3>
+                        <p style="margin-bottom:6px">Create → pojmenuj tematicky:</p>
+                        <p style="margin:0">✅ „Analýza trhu s tep. čerpadly Q1 2026“<br>✅ „Zkouška – Kognitivní psychologie“<br>❌ „Poznámky“ · ❌ „Všechno“</p>
+                    </div>
+                    <div class="card"><h3>2 · Nahrajte 3–5 zdrojů</h3>
+                        <p style="margin:0">Začněte malým, fokusovaným setem. Nemíchejte témata. Nemáte dokumenty? Spusťte <strong>Deep Research</strong> a nechte agenta najít ~50 zdrojů z webu.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="slide" data-block="4" data-name="Blok 4 · Hands-on" data-ref="3">
+            <div class="slide-inner">
+                <span class="eyebrow">Krok 3</span>
+                <h1>Nastavte jazyk a personu</h1>
+                <p><strong>Output Language</strong> → čeština (ovlivní chat i všechny výstupy). <strong>Configure Chat</strong> → vyberte styl (Default / Learning Guide / Custom).</p>
+                <div class="prompt">
+                    <span class="prompt-tag">Custom instrukce</span>
+                    <pre>Jsi můj research editor a strategický poradce. Hledej rozpory mezi zdroji, mapuj trendy a rizika. Odpovídej česky, stručně a vždy s citacemi. Pokud něco ve zdrojích není, řekni to přímo — nevymýšlej si.</pre>
+                    <button class="copy-btn">📋 Kopírovat</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="slide" data-block="4" data-name="Blok 4 · Hands-on" data-ref="3">
+            <div class="slide-inner">
+                <span class="eyebrow">Krok 4</span>
+                <h1>Položte první otázky</h1>
+                <p>Nezačínejte vágně („Co je v dokumentech?“). Buďte konkrétní:</p>
+                <ul>
+                    <li>„Kde se zdroje neshodují? Cituj konkrétní pasáže.“</li>
+                    <li>„Vytvoř executive brief na 200 slov se třemi příležitostmi a třemi riziky.“</li>
+                    <li>„Jaké otázky tenhle výzkum nezodpovídá?“</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="slide" data-block="4" data-name="Blok 4 · Hands-on" data-ref="3">
+            <div class="slide-inner">
+                <span class="eyebrow">Krok 5 &amp; 6</span>
+                <h1>Výstup a uložení</h1>
+                <div class="grid cols-2">
+                    <div class="card"><h3>5 · Vygenerujte výstup ve Studiu</h3>
+                        <p style="margin:0">Přehled → <strong>Report</strong> · Procvičování → <strong>Quiz/Flashcards</strong> · Data → <strong>Data Table</strong> · Prezentace → <strong>Slide Deck</strong> · Na cestu → <strong>Audio Overview</strong>.</p>
+                    </div>
+                    <div class="card do-card"><h3>6 · Uložte cenné odpovědi</h3>
+                        <p style="margin:0"><strong>Save to note</strong> zachová formát, tabulky i klikací citace. Poznámku pak <strong>Convert to source</strong> — vznikne vám archiv znalostí.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ BLOK 5 ============ -->
+        <section class="slide divider" data-block="5" data-name="Blok 5 · Zdroje" data-ref="4">
+            <div class="slide-inner">
+                <div class="divider-num">5</div>
+                <span class="eyebrow">~15 min</span>
+                <h1>Příprava zdrojů</h1>
+                <p class="lead" style="max-width:720px">Epistemické inženýrství. Kvalita vstupů je důležitější než kvalita promptů.</p>
+                <a class="ref-link" href="workshop.html#sekce-4" target="_blank" rel="noopener">📖 Otevřít v příručce ↗</a>
+            </div>
+        </section>
+
+        <section class="slide" data-block="5" data-name="Blok 5 · Zdroje" data-ref="4">
+            <div class="slide-inner">
+                <p class="big">Nasypte do zápisníku nepořádek a dostanete zpátky <span class="highlight">elegantně formulovaný nepořádek</span>.</p>
+                <p class="muted">Efektivita výstupů je přímo úměrná kvalitě vstupních dat. „Garbage in, garbage out.“</p>
+            </div>
+        </section>
+
+        <section class="slide" data-block="5" data-name="Blok 5 · Zdroje" data-ref="4">
+            <div class="slide-inner">
+                <span class="eyebrow">Zdrojová hygiena</span>
+                <h1>Co dělat a proč</h1>
+                <table>
+                    <thead><tr><th>Co dělat</th><th>Proč to funguje</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Popisné názvy zdrojů</strong><br>„[Projekt] – [Typ] – [Datum]“</td><td>AI vnímá názvy souborů — dávají jí okamžitý kontext a zlepšují přesnost citací.</td></tr>
+                        <tr><td><strong>Snížení šumu</strong><br>raději méně, ale kvalitních</td><td>Šum zvyšuje riziko špatně zvolené pasáže.</td></tr>
+                        <tr><td><strong>Rozdělení tlustých PDF</strong></td><td>Snazší citování a selektivní práce se zdroji (checkboxy).</td></tr>
+                        <tr><td><strong>Kontrola textové vrstvy PDF</strong></td><td>Naskenované PDF bez OCR NotebookLM špatně přečte.</td></tr>
+                        <tr><td><strong>Vlastní poznámky → zdroj</strong></td><td>Vznikne „kanonická“ vrstva: definice, rozhodnutí, glossary.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="slide" data-block="5" data-name="Blok 5 · Zdroje" data-ref="4">
+            <div class="slide-inner">
+                <span class="eyebrow">Dvě pasti a jedna technika</span>
+                <h1>Limity a mega-dokument</h1>
+                <div class="grid cols-2">
+                    <div class="card dont-card"><h3>⚠️ Limit 500 000 slov</h3><p style="margin:0">Když PDF přesáhne hranici, NotebookLM <strong>potichu přestane číst</strong> — bez varování. Velký dokument rozdělte.</p></div>
+                    <div class="card do-card"><h3>📦 Technika mega-dokumentu</h3><p style="margin:0">Tisíce drobných textů slučte tématicky <strong>před nahráním</strong> do jednoho velkého souboru. Obejdete limity a zlepšíte hledání souvislostí.</p></div>
+                </div>
+                <p class="muted" style="margin-top:12px"><strong>Diverzifikujte formáty:</strong> teorie (PDF) + praxe (YouTube transkripty) + data (Sheets) + reflexe (audio) = bohatší analýza.</p>
+            </div>
+        </section>
+
+        <section class="slide" data-block="5" data-name="Blok 5 · Zdroje" data-ref="4">
+            <div class="slide-inner">
+                <span class="eyebrow">Workflow „Triáda“</span>
+                <h1>Integrace s dalšími nástroji</h1>
+                <div class="rag-flow">
+                    <div class="rag-step">1 · Sběr<br><span style="font-weight:400;font-size:14px">Obsidian / Notion</span></div>
+                    <span class="rag-arrow">→</span>
+                    <div class="rag-step">2 · Syntéza<br><span style="font-weight:400;font-size:14px">NotebookLM</span></div>
+                    <span class="rag-arrow">→</span>
+                    <div class="rag-step">3 · Prezentace<br><span style="font-weight:400;font-size:14px">ChatGPT / Claude</span></div>
+                </div>
+                <ul>
+                    <li><strong>Sběr:</strong> nefiltrované poznámky a surový výzkum — tady žije všechno.</li>
+                    <li><strong>Syntéza:</strong> do NotebookLM nahráváte jen vyčištěné klastry zdrojů.</li>
+                    <li><strong>Prezentace:</strong> finální výstupy doladíte v kreativnějších modelech (design, styl).</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- ============ BLOK 6 ============ -->
+        <section class="slide divider" data-block="6" data-name="Blok 6 · Prompty" data-ref="5">
+            <div class="slide-inner">
+                <div class="divider-num">6</div>
+                <span class="eyebrow">~25 min</span>
+                <h1>Workflow a prompty</h1>
+                <p class="lead" style="max-width:720px">Jak psát prompty pro NotebookLM + knihovna 20+ hotových promptů ke kopírování.</p>
+                <a class="ref-link" href="workshop.html#sekce-5" target="_blank" rel="noopener">📖 Otevřít v příručce ↗</a>
+            </div>
+        </section>
+
+        <section class="slide" data-block="6" data-name="Blok 6 · Prompty" data-ref="5">
+            <div class="slide-inner">
+                <span class="eyebrow">Jiná pravidla</span>
+                <h1>Tři rozdíly oproti chatbotům</h1>
+                <div class="grid cols-3">
+                    <div class="card"><h3>1 · Důkazní režim</h3><p style="margin:0">Odpovědi mají citace. Hover = náhled, klik = skok do dokumentu.</p></div>
+                    <div class="card"><h3>2 · Jen vaše zdroje</h3><p style="margin:0">Chat odpovídá z dat ve zdrojích. Dotaz musí být o zdrojích, nebo jasně označený jako kreativní transformace.</p></div>
+                    <div class="card"><h3>3 · Configure Chat</h3><p style="margin:0">Styl a délku nastavíte jednou pro celý zápisník. U Custom 10 000 znaků.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="slide" data-block="6" data-name="Blok 6 · Prompty" data-ref="5">
+            <div class="slide-inner">
+                <span class="eyebrow">Recept</span>
+                <h1>Doporučená struktura promptu</h1>
+                <ol style="font-size:21px">
+                    <li><strong>Kontext</strong> — jaký typ zdrojů a pro koho to je</li>
+                    <li><strong>Úkol</strong> — co má vzniknout (konkrétní artefakt)</li>
+                    <li><strong>Důkazy</strong> — požadavek na citace + „když to není ve zdrojích, řekni to“</li>
+                    <li><strong>Formát</strong> — tabulka / odrážky / checklist</li>
+                    <li><strong>Kontrola</strong> — „vyjmenuj nejasnosti a navrhni, jaké zdroje chybí“</li>
+                </ol>
+            </div>
+        </section>
+
+        <section class="slide" data-block="6" data-name="Blok 6 · Prompty" data-ref="5">
+            <div class="slide-inner">
+                <span class="eyebrow">Knihovna · 1/6</span>
+                <h1>Univerzální prompty</h1>
+                <div class="prompt compact"><span class="prompt-tag">Univerzální</span><pre>Odpověz pouze na základě vybraných zdrojů. Každé tvrzení podlož citací. Pokud něco ve zdrojích není, napiš „ve zdrojích nenalezeno“.</pre><button class="copy-btn">📋 Kopírovat</button></div>
+                <div class="prompt compact"><span class="prompt-tag">Univerzální</span><pre>Najdi místa, kde si zdroje odporují (definice, čísla, doporučení). U každého rozporu popiš: A říká…, B říká…, možná příčina, co ověřit.</pre><button class="copy-btn">📋 Kopírovat</button></div>
+                <div class="prompt compact"><span class="prompt-tag">Univerzální</span><pre>Z tohoto dokumentu udělej checklist. Každý bod: akce, kritérium splnění, citace.</pre><button class="copy-btn">📋 Kopírovat</button></div>
+            </div>
+        </section>
+
+        <section class="slide" data-block="6" data-name="Blok 6 · Prompty" data-ref="5">
+            <div class="slide-inner">
+                <span class="eyebrow">Knihovna · 2/6</span>
+                <h1>Univerzální (pokračování)</h1>
+                <div class="prompt compact"><span class="prompt-tag">Univerzální</span><pre>Projdi tento text [vložit]. Vypiš všechny věty, které nejsou přímo podložené zdroji. U podložených uveď citaci. Navrhni přeformulování nepodložených.</pre><button class="copy-btn">📋 Kopírovat</button></div>
+                <div class="prompt compact"><span class="prompt-tag">Univerzální</span><pre>Vytvoř slovníček pojmů: termín → definice → citace → typický příklad ze zdroje.</pre><button class="copy-btn">📋 Kopírovat</button></div>
+            </div>
+        </section>
+
+        <section class="slide" data-block="6" data-name="Blok 6 · Prompty" data-ref="5">
+            <div class="slide-inner">
+                <span class="eyebrow">Knihovna · 3/6</span>
+                <h1>Výzkum a analýza</h1>
+                <div class="prompt compact"><span class="prompt-tag">Výzkum</span><pre>Analyzuj nahrané zdroje a identifikuj oblasti, kde se autoři neshodují. Uveď přímé citace pro každý protichůdný názor a vysvětli, proč k neshodě pravděpodobně dochází (rozdílná metodologie, čas vydání, ideologie).</pre><button class="copy-btn">📋 Kopírovat</button></div>
+                <div class="prompt compact"><span class="prompt-tag">Výzkum</span><pre>Vytvoř shrnutí pro vedení o délce max. 500 slov. Obsahuj: 1. Třívětý výtah situace. 2. Pět klíčových zjištění. 3. Analýzu rizik s odkazem na konkrétní varování v dokumentech. 4. Tři doporučené akční kroky.</pre><button class="copy-btn">📋 Kopírovat</button></div>
+                <div class="prompt compact"><span class="prompt-tag">Výzkum</span><pre>Vytvoř srovnávací tabulku: [Vendor A] vs [Vendor B] vs [Vendor C]. Sloupce: Cena, Klíčové funkce, Implementační rizika, Reference. Cituj zdroje u každé buňky.</pre><button class="copy-btn">📋 Kopírovat</button></div>
+            </div>
+        </section>
+
+        <section class="slide" data-block="6" data-name="Blok 6 · Prompty" data-ref="5">
+            <div class="slide-inner">
+                <span class="eyebrow">Knihovna · 4/6</span>
+                <h1>Studium a učení</h1>
+                <div class="prompt compact"><span class="prompt-tag">Studium</span><pre>Z těchto zdrojů navrhni 7denní učební plán. Každý den: témata, 3 otázky na porozumění, 5 pojmů, návrh procvičení. Cituj.</pre><button class="copy-btn">📋 Kopírovat</button></div>
+                <div class="prompt compact"><span class="prompt-tag">Studium</span><pre>Vygeneruj 12 otázek. U každé: správná odpověď, krátké vysvětlení, citace, 1 častý omyl.</pre><button class="copy-btn">📋 Kopírovat</button></div>
+                <div class="prompt compact"><span class="prompt-tag">Studium</span><pre>Neposkytuj mi přímé odpovědi. Místo toho mě veď k pochopení pomocí řady otázek založených na nahraných učebnicích. Pokud udělám chybu, nasměruj mě na konkrétní stranu v dokumentu.</pre><button class="copy-btn">📋 Kopírovat</button></div>
+            </div>
+        </section>
+
+        <section class="slide" data-block="6" data-name="Blok 6 · Prompty" data-ref="5">
+            <div class="slide-inner">
+                <span class="eyebrow">Knihovna · 5/6</span>
+                <h1>Byznys a obsah</h1>
+                <div class="prompt compact"><span class="prompt-tag">Byznys</span><pre>Vytvoř tabulku: Owner | Action | Priority | Due date | Dependencies | Evidence quote. Vyplň z transkriptů schůzek v tomto zápisníku.</pre><button class="copy-btn">📋 Kopírovat</button></div>
+                <div class="prompt compact"><span class="prompt-tag">Byznys</span><pre>Napiš decision memo: Kontext, Možnosti, Doporučení, Rizika, Nejasnosti. Každou sekci podlož citacemi.</pre><button class="copy-btn">📋 Kopírovat</button></div>
+                <div class="prompt compact"><span class="prompt-tag">Obsah</span><pre>Na základě dokumentu [NÁZEV] vytvoř: 1. LinkedIn post (háček, 3 vhledy, CTA). 2. Vlákno na Twitter (8 tweetů). 3. Newsletter sekci o 250 slovech. Zachovej přesnou terminologii ze zdroje.</pre><button class="copy-btn">📋 Kopírovat</button></div>
+            </div>
+        </section>
+
+        <section class="slide" data-block="6" data-name="Blok 6 · Prompty" data-ref="5">
+            <div class="slide-inner">
+                <span class="eyebrow">Knihovna · 6/6</span>
+                <h1>Persona prompty</h1>
+                <p class="muted" style="margin-top:-8px">Pro Configure Notebook / Custom — nastaví roli pro celý zápisník.</p>
+                <div class="prompt compact"><span class="prompt-tag">Persona</span><pre>Jsi přísný, ale férový výzkumný editor. Vždy hledej slabiny v argumentaci, ověřuj citace a upozorňuj na nepodložené závěry. Pokud je tvrzení správné, potvrď ho s citací. Pokud je problematické, vysvětli proč.</pre><button class="copy-btn">📋 Kopírovat</button></div>
+                <div class="prompt compact"><span class="prompt-tag">Persona</span><pre>Jsi trpělivý tutor, který mi pomáhá učit se nové koncepty. Vše vysvětluj jednoduše, s příklady ze zdrojů. Po každém vysvětlení polož kontrolní otázku. Pokud odpovím špatně, nasměruj mě na relevantní pasáž.</pre><button class="copy-btn">📋 Kopírovat</button></div>
+                <div class="prompt compact"><span class="prompt-tag">Persona</span><pre>Jsi senior konzultant. Na každý problém se dívej skrz framework: co funguje, co nefunguje, co chybí, co udělat jako první. Vždy cituj, vždy buď konkrétní, vždy navrhni další krok.</pre><button class="copy-btn">📋 Kopírovat</button></div>
+            </div>
+        </section>
+
+        <section class="slide" data-block="6" data-name="Blok 6 · Prompty" data-ref="5">
+            <div class="slide-inner">
+                <span class="eyebrow">Workflow pro role</span>
+                <h1>Tři typické scénáře</h1>
+                <div class="grid cols-3">
+                    <div class="card"><h3>Knowledge worker</h3><p style="margin:0">15 reportů → persona „senior analytik“ → série promptů → Studio <strong>Slide Deck</strong> + <strong>Data Table</strong> s akcemi (owner/deadline) → export do Sheets.</p></div>
+                    <div class="card"><h3>Student</h3><p style="margin:0">8 přednášek + 3 papery → Configure Chat <strong>Learning Guide</strong> → <strong>Study Guide</strong> + <strong>Quiz</strong> → u chyb Explain → <strong>Audio Overview</strong> Deep Dive.</p></div>
+                    <div class="card"><h3>Autor</h3><p style="margin:0">„Living document“ v Google Docs jako jediný zdroj → po úpravě „sync with Drive“ → „Které 3 nápady mají největší virální potenciál?“</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ BLOK 7 ============ -->
+        <section class="slide divider" data-block="7" data-name="Blok 7 · Tipy" data-ref="6">
+            <div class="slide-inner">
+                <div class="divider-num">7</div>
+                <span class="eyebrow">~15 min</span>
+                <h1>Tipy, triky a chyby</h1>
+                <p class="lead" style="max-width:720px">Co vám ušetří čas — a čeho se vyvarovat.</p>
+                <a class="ref-link" href="workshop.html#sekce-6" target="_blank" rel="noopener">📖 Otevřít v příručce ↗</a>
+            </div>
+        </section>
+
+        <section class="slide" data-block="7" data-name="Blok 7 · Tipy" data-ref="6">
+            <div class="slide-inner">
+                <span class="eyebrow">Méně známé funkce</span>
+                <h1>8 tipů, které mění hru</h1>
+                <div class="grid cols-2">
+                    <div class="card"><p style="margin:0"><strong>1 · Selektivní výběr zdrojů</strong> — odškrtni nepotřebné, snížíš šum.</p></div>
+                    <div class="card"><p style="margin:0"><strong>2 · Vypínání zdrojů za běhu</strong> — izoluj protichůdné teorie.</p></div>
+                    <div class="card"><p style="margin:0"><strong>3 · YouTube playlist import</strong> — znalostní báze z transkriptů (Plus/Pro).</p></div>
+                    <div class="card"><p style="margin:0"><strong>4 · Google Docs tabs</strong> — jeden zdroj, šetří sloty (pod-záložky se neimportují).</p></div>
+                    <div class="card"><p style="margin:0"><strong>5 · Hover &amp; klik na citaci</strong> — náhled a deep link do dokumentu.</p></div>
+                    <div class="card"><p style="margin:0"><strong>6 · Audio transkripce</strong> — citace propojené na přesný čas v nahrávce.</p></div>
+                    <div class="card"><p style="margin:0"><strong>7 · Řetězení výstupů</strong> — report → mind mapa → audio → flashcards.</p></div>
+                    <div class="card"><p style="margin:0"><strong>8 · Notebook jako prompt generátor</strong> — nahraj prompting guides, nech si tvořit prompty.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="slide" data-block="7" data-name="Blok 7 · Tipy" data-ref="6">
+            <div class="slide-inner">
+                <span class="eyebrow">Best practices</span>
+                <h1>Dělat / Nedělat</h1>
+                <div class="grid cols-2">
+                    <div class="card do-card"><h3>✅ Dělat</h3><ul style="margin-bottom:0">
+                        <li>Menší, tematicky zaměřené zápisníky</li>
+                        <li>Ověřit, že PDF má skutečný text (OCR)</li>
+                        <li>Vždy zkontrolovat citace kliknutím</li>
+                        <li>Nastavit Custom Instructions</li>
+                        <li>Batchovat prompty do jednoho dotazu</li>
+                        <li>Archivovat poznámky před mazáním</li>
+                    </ul></div>
+                    <div class="card dont-card"><h3>❌ Nedělat</h3><ul style="margin-bottom:0">
+                        <li>Jeden mega-zápisník na všechno</li>
+                        <li>Nahrávat naskenované PDF bez OCR</li>
+                        <li>Bezmyšlenkovitě kopírovat odpovědi</li>
+                        <li>Nechat defaultní nastavení</li>
+                        <li>Plýtvat limitem jednotlivými otázkami</li>
+                        <li>Mazat zdroje bez archivace</li>
+                    </ul></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="slide" data-block="7" data-name="Blok 7 · Tipy" data-ref="6">
+            <div class="slide-inner">
+                <span class="eyebrow">Pozor</span>
+                <h1>Bonusová chyba: klam plynulosti</h1>
+                <p class="big">Dobře napsaný text v nás vyvolává pocit, že je <span class="highlight">pravdivý</span>.</p>
+                <p>Model rád přidává „přesvědčivý nátěr“ k informacím, které ve zdrojích nejsou. Obrana — vložte do analytických promptů klauzuli:</p>
+                <div class="prompt">
+                    <span class="prompt-tag">Pojistka proti halucinacím</span>
+                    <pre>Uváděj pouze to, co je explicitně napsáno. Pokud interpretuješ nebo odvozuješ, označ to jako „analytický odhad“.</pre>
+                    <button class="copy-btn">📋 Kopírovat</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ BLOK 8 ============ -->
+        <section class="slide divider" data-block="8" data-name="Blok 8 · Strategie" data-ref="7">
+            <div class="slide-inner">
+                <div class="divider-num">8</div>
+                <span class="eyebrow">~10 min</span>
+                <h1>Strategie a budoucnost</h1>
+                <p class="lead" style="max-width:720px">Kdy NotebookLM použít, kdy ne — a kam Google míří.</p>
+                <a class="ref-link" href="workshop.html#sekce-7" target="_blank" rel="noopener">📖 Otevřít v příručce ↗</a>
+            </div>
+        </section>
+
+        <section class="slide" data-block="8" data-name="Blok 8 · Strategie" data-ref="7">
+            <div class="slide-inner">
+                <span class="eyebrow">Rozhodování</span>
+                <h1>Kdy ANO / kdy NE</h1>
+                <div class="grid cols-2">
+                    <div class="card do-card"><h3>✅ Kdy ano</h3><ul style="margin-bottom:0">
+                        <li>Analýza vlastních dokumentů</li>
+                        <li>Příprava na zkoušky</li>
+                        <li>Literature review (rozpory, mezery)</li>
+                        <li>Příprava a follow-up meetingů</li>
+                        <li>Onboarding z firemní dokumentace</li>
+                        <li>„Druhý mozek“</li>
+                    </ul></div>
+                    <div class="card dont-card"><h3>❌ Kdy ne → co místo toho</h3><ul style="margin-bottom:0">
+                        <li>Obecné otázky o světě → Perplexity, Gemini</li>
+                        <li>Brainstorming od nuly → ChatGPT, Claude</li>
+                        <li>Vývoj softwaru → Cursor, Claude Code</li>
+                        <li>Akademické citace (BibTeX) → Zotero</li>
+                        <li>Vysoce citlivá data → lokální LLM</li>
+                    </ul></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="slide" data-block="8" data-name="Blok 8 · Strategie" data-ref="7">
+            <div class="slide-inner">
+                <span class="eyebrow">Kam to míří</span>
+                <h1>Od asistenta k agentovi — už se to děje</h1>
+                <p>Deep Research byl první krok. Velký update z června 2026 posun dokončil:</p>
+                <ul>
+                    <li><strong>Agentický sběr zdrojů</strong> — zápisník si bázi pomůže postavit sám z chatu</li>
+                    <li><strong>Vlastní cloud computer</strong> se spouštěním kódu</li>
+                    <li><strong>Paměť napříč relacemi</strong></li>
+                </ul>
+                <p class="muted">Další očekávaný krok: zápisníky, které se samy aktualizují podle změn ve zdrojích a proaktivně upozorňují na nové informace.</p>
+            </div>
+        </section>
+
+        <section class="slide" data-block="8" data-name="Blok 8 · Strategie" data-ref="7">
+            <div class="slide-inner">
+                <span class="eyebrow">Vývoj</span>
+                <h1>Mini-timeline</h1>
+                <div class="tl">
+                    <div class="tl-item"><div class="tl-date">Září 2024</div><div>Audio Overviews — funkce, která NotebookLM proslavila</div></div>
+                    <div class="tl-item"><div class="tl-date">Prosinec 2024</div><div>NotebookLM Plus + interaktivní Audio Overviews</div></div>
+                    <div class="tl-item"><div class="tl-date">Září 2025</div><div>Flashcards, Quizzes, Learning Guide, Enterprise API</div></div>
+                    <div class="tl-item"><div class="tl-date">Prosinec 2025</div><div>Slide Decks + Data Tables, AI ve Workspace plánech</div></div>
+                    <div class="tl-item"><div class="tl-date">Leden 2026</div><div>NotebookLM jako zdroj v Gemini app</div></div>
+                    <div class="tl-item"><div class="tl-date">Květen 2026</div><div>Google I/O — Ultra se dělí na dvě varianty (20/30 TB)</div></div>
+                    <div class="tl-item"><div class="tl-date">Červen 2026</div><div><strong>Gemini 3.5, agentický sběr zdrojů, cloud computer, paměť, exporty</strong></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ CHEAT SHEET / ZÁVĚR ============ -->
+        <section class="slide divider" data-block="8" data-name="Cheat Sheet" data-ref="8">
+            <div class="slide-inner">
+                <span class="eyebrow">Reference</span>
+                <h1>Cheat Sheet</h1>
+                <p class="lead" style="max-width:720px">Vše podstatné na pár slidech. Detailní verze je v příručce.</p>
+                <a class="ref-link" href="workshop.html#sekce-8" target="_blank" rel="noopener">📖 Otevřít cheat sheet ↗</a>
+            </div>
+        </section>
+
+        <section class="slide" data-block="8" data-name="Cheat Sheet" data-ref="8">
+            <div class="slide-inner">
+                <span class="eyebrow">Zapamatovat si</span>
+                <h1>Pět pravidel</h1>
+                <ol style="font-size:20px">
+                    <li><strong>Nekopírujte výstupy bez kontroly</strong> — vždy klikněte na citace.</li>
+                    <li><strong>Nastavte Custom Instructions</strong> — bez nich dostáváte generické odpovědi.</li>
+                    <li><strong>Batchujte prompty</strong> — jeden strukturovaný = 3–5 jednoduchých otázek.</li>
+                    <li><strong>Archivujte před mazáním</strong> — Convert to source, pak teprve mažte.</li>
+                    <li><strong>Prohledávání napříč zápisníky neexistuje</strong> — pojmenovávejte popisně, děl tematicky.</li>
+                </ol>
+            </div>
+        </section>
+
+        <section class="slide" data-block="8" data-name="Cheat Sheet" data-ref="8">
+            <div class="slide-inner">
+                <span class="eyebrow">Studio</span>
+                <h1>Co generovat kdy</h1>
+                <table>
+                    <thead><tr><th>Potřebuji…</th><th>Generuji…</th></tr></thead>
+                    <tbody>
+                        <tr><td>Přehled</td><td>Report (Briefing / Study Guide / FAQ)</td></tr>
+                        <tr><td>Procvičování</td><td>Quiz / Flashcards</td></tr>
+                        <tr><td>Strukturovaná data</td><td>Data Table → Export to Sheets</td></tr>
+                        <tr><td>Prezentaci</td><td>Slide Deck → Google Slides</td></tr>
+                        <tr><td>Vizuální přehled</td><td>Mind Map / Infografika</td></tr>
+                        <tr><td>Porozumění „na cestě“</td><td>Audio Overview (Deep Dive / Brief / Critique / Debate)</td></tr>
+                        <tr><td>Video explainer</td><td>Video Overview (Pro / Ultra)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="slide" data-block="8" data-name="Cheat Sheet" data-ref="8">
+            <div class="slide-inner">
+                <span class="eyebrow">Šablona</span>
+                <h1>Univerzální prompt</h1>
+                <div class="prompt">
+                    <span class="prompt-tag">Šablona</span>
+                    <pre>[Role]: Jsi [typ experta].
+[Úkol]: Udělej [konkrétní artefakt] z [vybraných zdrojů].
+[Důkazy]: Každé tvrzení podlož citací. Pokud něco ve zdrojích není, napiš „nenalezeno“.
+[Formát]: [Tabulka / odrážky / checklist / JSON].
+[Kontrola]: Na konci vyjmenuj nejasnosti a navrhni, jaké zdroje chybí.</pre>
+                    <button class="copy-btn">📋 Kopírovat</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="slide title" data-block="8" data-name="Závěr" data-ref="8">
+            <div class="slide-inner">
+                <div class="title-badge">🎉 Hotovo</div>
+                <h1>Díky a hodně<br>chytrých zápisníků</h1>
+                <p class="lead">Celá příručka se všemi detaily, tabulkami a prompty zůstává po ruce jako reference.</p>
+                <a class="ref-link" href="workshop.html" target="_blank" rel="noopener">📖 Otevřít kompletní příručku ↗</a>
+            </div>
+        </section>
+
+    </div>
+
+    <div class="footer">
+        <div class="footer-block" id="footerBlock">Úvod</div>
+        <div class="nav-arrows">
+            <button class="arrow" id="prevBtn" aria-label="Předchozí">‹</button>
+            <span class="counter" id="counter">1 / 1</span>
+            <button class="arrow" id="nextBtn" aria-label="Další">›</button>
+        </div>
+    </div>
+
+    <div class="hint" id="hint">Ovládání: šipky ← → nebo mezerník · klik do plochy = další</div>
+
+    <script>
+        const slides = Array.from(document.querySelectorAll('.slide'));
+        const total = slides.length;
+        let current = 0;
+
+        const progress = document.getElementById('progress');
+        const counter = document.getElementById('counter');
+        const footerBlock = document.getElementById('footerBlock');
+        const refBtn = document.getElementById('refBtn');
+        const hint = document.getElementById('hint');
+
+        function show(i, push) {
+            current = Math.max(0, Math.min(total - 1, i));
+            slides.forEach((s, idx) => s.classList.toggle('active', idx === current));
+            // resetuj scroll na začátek slidu
+            slides[current].scrollTop = 0;
+            const slide = slides[current];
+
+            progress.style.width = ((current + 1) / total * 100) + '%';
+            counter.textContent = (current + 1) + ' / ' + total;
+            footerBlock.textContent = slide.dataset.name || '';
+
+            // Tlačítko Příručka → odkaz na odpovídající sekci
+            const ref = slide.dataset.ref;
+            if (ref !== undefined) {
+                refBtn.href = 'workshop.html#sekce-' + ref;
+                refBtn.hidden = false;
+            } else {
+                refBtn.href = 'workshop.html';
+            }
+
+            if (push !== false) history.replaceState(null, '', '#' + (current + 1));
+        }
+
+        function next() { if (current < total - 1) show(current + 1); }
+        function prev() { if (current > 0) show(current - 1); }
+
+        // Klávesnice
+        document.addEventListener('keydown', (e) => {
+            switch (e.key) {
+                case 'ArrowRight': case 'PageDown': case ' ': e.preventDefault(); next(); break;
+                case 'ArrowLeft': case 'PageUp': e.preventDefault(); prev(); break;
+                case 'Home': e.preventDefault(); show(0); break;
+                case 'End': e.preventDefault(); show(total - 1); break;
+            }
+        });
+
+        // Klik do plochy = další (ignoruj tlačítka, odkazy, prompty a výběr textu)
+        document.getElementById('deck').addEventListener('click', (e) => {
+            if (e.target.closest('button, a, .prompt')) return;
+            if (window.getSelection && String(window.getSelection())) return;
+            next();
+        });
+
+        document.getElementById('nextBtn').addEventListener('click', next);
+        document.getElementById('prevBtn').addEventListener('click', prev);
+
+        // Kopírování promptů
+        document.querySelectorAll('.copy-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const pre = btn.closest('.prompt').querySelector('pre');
+                navigator.clipboard.writeText(pre.textContent).then(() => {
+                    const orig = btn.textContent;
+                    btn.textContent = '✓ Zkopírováno';
+                    btn.classList.add('copied');
+                    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1800);
+                });
+            });
+        });
+
+        // Dark mode (s uložením volby)
+        const darkBtn = document.getElementById('darkBtn');
+        function applyDark(on) {
+            document.body.classList.toggle('dark', on);
+            darkBtn.innerHTML = on ? '☀️ <span class="label-txt">Světlý</span>' : '🌙 <span class="label-txt">Tmavý</span>';
+        }
+        let dark = false;
+        try { dark = localStorage.getItem('nblm-deck-dark') === '1'; } catch (e) {}
+        if (!dark && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) dark = true;
+        applyDark(dark);
+        darkBtn.addEventListener('click', () => {
+            dark = !dark; applyDark(dark);
+            try { localStorage.setItem('nblm-deck-dark', dark ? '1' : '0'); } catch (e) {}
+        });
+
+        // Start na slidu z hashe (#číslo)
+        const startHash = parseInt((location.hash || '').replace('#', ''), 10);
+        show(Number.isFinite(startHash) && startHash >= 1 ? startHash - 1 : 0, false);
+
+        // Schovej nápovědu po chvíli
+        setTimeout(() => { hint.style.opacity = '0'; }, 4500);
+    </script>
+</body>
+</html>

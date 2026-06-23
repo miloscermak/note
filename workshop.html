@@ -739,7 +739,12 @@
         // Hlavní aplikace
         function WorkshopApp() {
             const [darkMode, setDarkMode] = useState(false);
-            const [activeSection, setActiveSection] = useState(0);
+            // Počáteční sekce čteme z URL hashe (#sekce-N) — kvůli odkazům z prezentace
+            const getSectionFromHash = () => {
+                const m = window.location.hash.match(/sekce-(\d+)/);
+                return m ? Math.max(0, Math.min(8, Number(m[1]))) : 0;
+            };
+            const [activeSection, setActiveSection] = useState(getSectionFromHash());
             const [sidebarOpen, setSidebarOpen] = useState(false);
             const [completedSteps, setCompletedSteps] = useState(new Set());
             const [checkboxStates, setCheckboxStates] = useState({});
@@ -747,6 +752,21 @@
             useEffect(() => {
                 document.body.className = darkMode ? 'dark' : '';
             }, [darkMode]);
+
+            // Synchronizace hashe s aktivní sekcí (sdílitelné a hluboké odkazy)
+            useEffect(() => {
+                const newHash = '#sekce-' + activeSection;
+                if (window.location.hash !== newHash) {
+                    history.replaceState(null, '', newHash);
+                }
+            }, [activeSection]);
+
+            // Reakce na změnu hashe (back/forward, odkaz z jiné záložky)
+            useEffect(() => {
+                const onHashChange = () => setActiveSection(getSectionFromHash());
+                window.addEventListener('hashchange', onHashChange);
+                return () => window.removeEventListener('hashchange', onHashChange);
+            }, []);
 
             const sections = [
                 { id: 0, title: 'Úvod: Proč NotebookLM', time: '~10 min' },
@@ -1641,8 +1661,8 @@
                                 <td>ChatGPT, Claude</td>
                             </tr>
                             <tr>
-                                <td>Programování</td>
-                                <td>Chybí IDE integrace a exekuce kódu</td>
+                                <td>Programování (vývoj softwaru)</td>
+                                <td>Kód sice umí spouštět nad vašimi zdroji, ale není to vývojové prostředí (IDE) pro stavbu aplikací</td>
                                 <td>Cursor, GitHub Copilot, Claude Code</td>
                             </tr>
                             <tr>
